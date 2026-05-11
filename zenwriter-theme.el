@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.2.3
+;; Version: 0.2.4
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, themes
 ;; URL: https://github.com/jhou1/zenwriter-mode
@@ -234,7 +234,18 @@
  '(orderless-match-face-2 ((((background light)) (:foreground "#424242" :weight bold))
                            (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(orderless-match-face-3 ((((background light)) (:foreground "#424242" :weight bold))
-                           (((background dark))  (:foreground "#C5C9C6" :weight bold)))))
+                           (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ ;; --- Ivy / Counsel ---
+ '(ivy-current-match ((((background light)) (:background "#E0E0E0" :foreground "#424242"))
+                      (((background dark))  (:background "#2A2C2D" :foreground "#C5C9C6"))))
+ '(ivy-minibuffer-match-face-1 ((((background light)) (:background unspecified :foreground "#424242"))
+                                (((background dark))  (:background unspecified :foreground "#C5C9C6"))))
+ '(ivy-minibuffer-match-face-2 ((((background light)) (:background unspecified :foreground "#424242" :weight bold))
+                                (((background dark))  (:background unspecified :foreground "#C5C9C6" :weight bold))))
+ '(ivy-minibuffer-match-face-3 ((((background light)) (:background unspecified :foreground "#424242" :weight bold))
+                                (((background dark))  (:background unspecified :foreground "#C5C9C6" :weight bold))))
+ '(ivy-minibuffer-match-face-4 ((((background light)) (:background unspecified :foreground "#424242" :weight bold))
+                                (((background dark))  (:background unspecified :foreground "#C5C9C6" :weight bold)))))
 
 (provide-theme 'zenwriter)
 
