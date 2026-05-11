@@ -208,13 +208,25 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
   (dolist (frame (frame-list))
     (frame-set-background-mode frame)))
 
+(defun zenwriter--focus-refresh ()
+  "Refresh focus mode overlay colors for the current theme."
+  (let ((dimmed (zenwriter--focus-dimmed-color)))
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (and zenwriter-focus-mode
+                   zenwriter--focus-before-ov
+                   zenwriter--focus-after-ov)
+          (overlay-put zenwriter--focus-before-ov 'face `(:foreground ,dimmed))
+          (overlay-put zenwriter--focus-after-ov 'face `(:foreground ,dimmed)))))))
+
 (defun zenwriter--apply-appearance (appearance)
   "Switch zenwriter theme for the new system APPEARANCE (light or dark)."
   (setq frame-background-mode (if (eq appearance 'dark) 'dark 'light))
   (dolist (frame (frame-list))
     (frame-set-background-mode frame))
   (disable-theme 'zenwriter)
-  (zenwriter--load-theme))
+  (zenwriter--load-theme)
+  (zenwriter--focus-refresh))
 
 (defun zenwriter--global-disable ()
   "Deactivate zen writing environment, restoring saved state."
