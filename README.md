@@ -9,7 +9,7 @@ A distraction-free writing environment for Emacs, inspired by [iA Writer](https:
 - Monochromatic grays for light mode, subtle muted colors for dark mode
 - First-class Org mode and Markdown faces — headings are bold, same size as body text
 - Subtle link underlines for discoverability without visual noise
-- Ultra-minimal modeline
+- Invisible modeline
 
 **Zen writing mode** (`zen-writer.el`)
 - `zen-writer-mode` (buffer-local) — olivetti centering + generous line spacing
@@ -19,12 +19,30 @@ A distraction-free writing environment for Emacs, inspired by [iA Writer](https:
 - `zen-writer-focus-mode` (buffer-local) — dims all text except the current visual line
 - `global-zen-writer-focus-mode` — focus mode in all buffers
 
+## Prerequisites
+
+### Font: Maple Mono CN
+
+The theme uses [Maple Mono CN](https://github.com/subframe7536/maple-font) by default. Install it before using `global-zen-writer-mode`.
+
+**macOS (Homebrew):**
+
+```bash
+brew install --cask font-maple-mono-cn
+```
+
+**Manual download:**
+
+Download from [Maple Font releases](https://github.com/subframe7536/maple-font/releases) and install the `MapleMono-CN-*.ttf` files to your system fonts directory.
+
+If you prefer a different font, set `zen-writer-font-family` before enabling the mode.
+
 ## Installation
 
 ### Manual
 
 ```bash
-git clone https://github.com/jhou/emacs-writer ~/Projects/emacs-writer
+git clone https://github.com/jhou1/emacs-writer ~/Projects/emacs-writer
 ```
 
 Add to your `init.el` or `.emacs`:
@@ -42,7 +60,7 @@ Add to your `init.el` or `.emacs`:
   :straight (zen-writer
     :type git
     :host github
-    :repo "jhou/emacs-writer"
+    :repo "jhou1/emacs-writer"
     :files ("*.el"))
   :commands (zen-writer-mode global-zen-writer-mode
              zen-writer-focus-mode global-zen-writer-focus-mode)
@@ -82,7 +100,7 @@ Toggle off with the same commands (or pass `-1`). `global-zen-writer-mode` resto
 Example:
 
 ```elisp
-(setq zen-writer-font-family "Zen Writer Quattro S")
+(setq zen-writer-font-family "Iosevka")
 (setq zen-writer-body-width 90)
 (setq zen-writer-line-spacing 6)
 ```

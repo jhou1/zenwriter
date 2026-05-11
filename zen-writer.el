@@ -96,7 +96,7 @@ When nil, auto-detected from `font-lock-comment-face'."
 (defun zen-writer--find-font ()
   "Return the first available font from preferred list."
   (seq-find (lambda (f) (member f (font-family-list)))
-            (list zen-writer-font-family "Maple Mono CN" "Zen Writer Quattro S" "Menlo" "Consolas" "Courier New")))
+            (list zen-writer-font-family "Maple Mono CN" "Menlo" "Consolas" "Courier New")))
 
 (defun zen-writer--turn-on ()
   "Turn on `zen-writer-mode' in the current buffer if appropriate."
