@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zenwriter-mode</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: #424242;
+  background: #f8f8f8;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 80px 24px;
+}
+h1 {
+  font-size: 1.6em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.subtitle {
+  color: #888;
+  margin-bottom: 48px;
+  font-size: 1.05em;
+}
+.subtitle a { color: #888; }
+h2 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 48px;
+  margin-bottom: 12px;
+  color: #333;
+}
+p, ul, ol { margin-bottom: 16px; }
+ul { padding-left: 20px; }
+li { margin-bottom: 6px; }
+code {
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 0.88em;
+  background: #eee;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+pre {
+  background: #1D1F20;
+  color: #C5C9C6;
+  padding: 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  font-size: 0.88em;
+  line-height: 1.6;
+}
+pre code { background: none; padding: 0; color: inherit; }
+a { color: #424242; }
+.features { list-style: none; padding: 0; }
+.features li { padding-left: 0; }
+.features li::before { content: none; }
+hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 48px 0;
+}
+.footer {
+  margin-top: 64px;
+  color: #bbb;
+  font-size: 0.85em;
+}
+.footer a { color: #999; }
+
+/* Image comparison slider */
+.compare {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  margin-bottom: 48px;
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.compare img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.compare .img-dark { position: relative; }
+.compare .img-light {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: inset(0 50% 0 0);
+}
+.compare .divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(255,255,255,0.7);
+  z-index: 2;
+  pointer-events: none;
+}
+.compare .handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.compare .handle svg { width: 18px; height: 18px; fill: #555; }
+.compare .label {
+  position: absolute;
+  top: 12px;
+  z-index: 2;
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.compare .label-light {
+  left: 12px;
+  color: #666;
+  background: rgba(245,246,246,0.85);
+}
+.compare .label-dark {
+  right: 12px;
+  color: #aaa;
+  background: rgba(29,31,32,0.85);
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>zenwriter-mode</h1>
+<p class="subtitle">Distraction-free writing for Emacs, inspired by <a href="https://ia.net/writer">iA Writer</a>.</p>
+
+<div class="compare" id="compare">
+  <img class="img-dark" src="dark.png" alt="Dark mode" draggable="false">
+  <img class="img-light" src="light.png" alt="Light mode" draggable="false">
+  <div class="divider"></div>
+  <div class="handle">
+    <svg viewBox="0 0 24 24"><path d="M8 5l-5 7 5 7M16 5l5 7-5 7"/><path d="M8 5l-5 7 5 7" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 5l5 7-5 7" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <span class="label label-light">Light</span>
+  <span class="label label-dark">Dark</span>
+</div>
+
+<ul class="features">
+  <li>Light and dark themes &mdash; auto-detected from system appearance</li>
+  <li>Olivetti centering, generous line spacing, hidden chrome</li>
+  <li>Focus mode &mdash; dims all text except the current line</li>
+  <li>First-class Org and Markdown faces</li>
+  <li>One command to enable, one to restore</li>
+</ul>
+
+<hr>
+
+<h2>Quick start</h2>
+
+<pre><code>;; Load the theme only
+(load-theme 'zenwriter t)
+
+;; Full experience &mdash; theme, font, hidden chrome
+(global-zenwriter-mode 1)</code></pre>
+
+<h2>Install</h2>
+
+<pre><code>(use-package zenwriter-mode
+  :straight (zenwriter-mode
+    :type git
+    :host github
+    :repo "jhou1/zenwriter-mode"
+    :files ("*.el"))
+  :commands (zenwriter-mode global-zenwriter-mode)
+  :init
+  (add-to-list 'custom-theme-load-path
+    (expand-file-name "straight/repos/zenwriter-mode"
+                      user-emacs-directory)))</code></pre>
+
+<h2>Customize</h2>
+
+<pre><code>(setq zenwriter-font-family "Iosevka")
+(setq zenwriter-body-width 90)
+(setq zenwriter-line-spacing 6)</code></pre>
+
+<p class="footer">
+  Emacs 26.1+ &middot; <a href="https://github.com/subframe7536/maple-font">Maple Mono CN</a> font &middot; GPL-3.0<br>
+  <a href="https://github.com/jhou1/zenwriter-mode">Source on GitHub</a>
+</p>
+
+</div>
+
+<script>
+(function() {
+  var el = document.getElementById('compare');
+  var light = el.querySelector('.img-light');
+  var divider = el.querySelector('.divider');
+  var handle = el.querySelector('.handle');
+  var dragging = false;
+
+  function update(x) {
+    var rect = el.getBoundingClientRect();
+    var pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width)) * 100;
+    light.style.clipPath = 'inset(0 ' + (100 - pct) + '% 0 0)';
+    divider.style.left = pct + '%';
+    handle.style.left = pct + '%';
+  }
+
+  el.addEventListener('mousedown', function(e) { dragging = true; update(e.clientX); });
+  window.addEventListener('mousemove', function(e) { if (dragging) update(e.clientX); });
+  window.addEventListener('mouseup', function() { dragging = false; });
+  el.addEventListener('touchstart', function(e) { update(e.touches[0].clientX); }, {passive: true});
+  el.addEventListener('touchmove', function(e) { update(e.touches[0].clientX); }, {passive: true});
+})();
+</script>
+</body>
+</html>
