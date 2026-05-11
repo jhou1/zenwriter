@@ -42,14 +42,14 @@ If you prefer a different font, set `zen-writer-font-family` before enabling the
 ### Manual
 
 ```bash
-git clone https://github.com/jhou1/emacs-writer ~/Projects/emacs-writer
+git clone https://github.com/jhou1/emacs-writer /path/to/emacs-writer
 ```
 
 Add to your `init.el` or `.emacs`:
 
 ```elisp
-(add-to-list 'custom-theme-load-path "~/Projects/emacs-writer")
-(add-to-list 'load-path "~/Projects/emacs-writer")
+(add-to-list 'custom-theme-load-path "/path/to/emacs-writer")
+(add-to-list 'load-path "/path/to/emacs-writer")
 (require 'zen-writer)
 ```
 
