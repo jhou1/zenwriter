@@ -2,6 +2,9 @@
 
 A distraction-free writing environment for Emacs, inspired by [iA Writer](https://ia.net/writer). Monochromatic color theme with a signature blue cursor, zen writing modes, and visual-line focus dimming.
 
+![](light.png)
+![](dark.png)
+
 ## Features
 
 **Color theme** (`zen-writer-theme.el`)
