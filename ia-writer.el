@@ -175,6 +175,79 @@ When nil, auto-detected from `font-lock-comment-face'."
       (when (get-buffer-window buf)
         (set-window-buffer (get-buffer-window buf) buf)))))
 
+(defvar-local ia-writer--focus-before-ov nil
+  "Overlay covering text before the active unit.")
+
+(defvar-local ia-writer--focus-after-ov nil
+  "Overlay covering text after the active unit.")
+
+(defun ia-writer--focus-dimmed-color ()
+  "Return the color to use for dimmed text."
+  (or ia-writer-focus-dimmed-color
+      (face-foreground 'font-lock-comment-face nil t)
+      "#9E9E9E"))
+
+(defun ia-writer--focus-bounds ()
+  "Return (BEG . END) of the current focus unit."
+  (let ((beg (point))
+        (end (point)))
+    (save-excursion
+      (if (eq ia-writer-focus-unit 'paragraph)
+          (progn
+            (backward-paragraph)
+            (skip-chars-forward "\n\t ")
+            (setq beg (point)))
+        (condition-case nil
+            (progn
+              (backward-sentence)
+              (setq beg (point)))
+          (error (setq beg (line-beginning-position)))))
+      (goto-char end)
+      (if (eq ia-writer-focus-unit 'paragraph)
+          (progn
+            (forward-paragraph)
+            (skip-chars-backward "\n\t ")
+            (setq end (point)))
+        (condition-case nil
+            (progn
+              (forward-sentence)
+              (setq end (point)))
+          (error (setq end (line-end-position))))))
+    (cons beg end)))
+
+(defun ia-writer--focus-update ()
+  "Update focus overlays around the current unit."
+  (when (and ia-writer-focus-mode
+             ia-writer--focus-before-ov
+             ia-writer--focus-after-ov)
+    (let* ((bounds (ia-writer--focus-bounds))
+           (beg (car bounds))
+           (end (cdr bounds)))
+      (move-overlay ia-writer--focus-before-ov (point-min) beg)
+      (move-overlay ia-writer--focus-after-ov end (point-max)))))
+
+;;;###autoload
+(define-minor-mode ia-writer-focus-mode
+  "Buffer-local minor mode that dims text outside the current sentence."
+  :lighter nil
+  (if ia-writer-focus-mode
+      (let ((dimmed (ia-writer--focus-dimmed-color)))
+        (setq ia-writer--focus-before-ov (make-overlay (point-min) (point-min)))
+        (setq ia-writer--focus-after-ov (make-overlay (point-max) (point-max)))
+        (overlay-put ia-writer--focus-before-ov 'face `(:foreground ,dimmed))
+        (overlay-put ia-writer--focus-after-ov 'face `(:foreground ,dimmed))
+        (overlay-put ia-writer--focus-before-ov 'priority 100)
+        (overlay-put ia-writer--focus-after-ov 'priority 100)
+        (add-hook 'post-command-hook #'ia-writer--focus-update nil t)
+        (ia-writer--focus-update))
+    (remove-hook 'post-command-hook #'ia-writer--focus-update t)
+    (when ia-writer--focus-before-ov
+      (delete-overlay ia-writer--focus-before-ov)
+      (setq ia-writer--focus-before-ov nil))
+    (when ia-writer--focus-after-ov
+      (delete-overlay ia-writer--focus-after-ov)
+      (setq ia-writer--focus-after-ov nil))))
+
 (provide 'ia-writer)
 
 ;;; ia-writer.el ends here
