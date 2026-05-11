@@ -62,6 +62,119 @@ When nil, auto-detected from `font-lock-comment-face'."
                  (string :tag "Color hex"))
   :group 'ia-writer)
 
+(defvar ia-writer--saved-state nil
+  "Alist of saved settings to restore when `ia-writer-mode' is disabled.")
+
+(defun ia-writer--find-font ()
+  "Return the first available font from preferred list."
+  (seq-find (lambda (f) (member f (font-family-list)))
+            (list ia-writer-font-family "IBM Plex Mono" "Menlo" "Consolas" "Courier New")))
+
+(defun ia-writer--save (key value)
+  "Save KEY with VALUE to the saved state alist."
+  (setf (alist-get key ia-writer--saved-state) value))
+
+(defun ia-writer--restore (key)
+  "Restore and remove KEY from saved state. Returns the saved value."
+  (let ((val (alist-get key ia-writer--saved-state)))
+    (setf (alist-get key ia-writer--saved-state nil t) nil)
+    val))
+
+;;;###autoload
+(define-minor-mode ia-writer-mode
+  "Global minor mode for iA Writer zen writing experience."
+  :global t
+  :lighter nil
+  (if ia-writer-mode
+      (ia-writer--enable)
+    (ia-writer--disable)))
+
+(defun ia-writer--enable ()
+  "Activate zen writing environment."
+  ;; Theme
+  (unless (member 'ia-writer custom-enabled-themes)
+    (ia-writer--save 'theme t)
+    (load-theme 'ia-writer t))
+  ;; Font
+  (let ((font (ia-writer--find-font)))
+    (when font
+      (ia-writer--save 'font (face-attribute 'default :family))
+      (ia-writer--save 'font-size (face-attribute 'default :height))
+      (set-face-attribute 'default nil :family font :height ia-writer-font-size)))
+  ;; Line spacing
+  (ia-writer--save 'line-spacing (default-value 'line-spacing))
+  (setq-default line-spacing ia-writer-line-spacing)
+  ;; Mode line
+  (ia-writer--save 'mode-line-format (default-value 'mode-line-format))
+  (setq-default mode-line-format (list " "))
+  ;; UI chrome
+  (ia-writer--save 'scroll-bar-mode scroll-bar-mode)
+  (ia-writer--save 'tool-bar-mode tool-bar-mode)
+  (ia-writer--save 'menu-bar-mode menu-bar-mode)
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  ;; Centering
+  (if (require 'olivetti nil t)
+      (progn
+        (ia-writer--save 'olivetti t)
+        (setq olivetti-body-width ia-writer-body-width)
+        (dolist (buf (buffer-list))
+          (with-current-buffer buf
+            (olivetti-mode 1))))
+    (ia-writer--save 'left-margin (default-value 'left-margin-width))
+    (ia-writer--save 'right-margin (default-value 'right-margin-width))
+    (let ((margin (max 0 (/ (- (window-total-width) ia-writer-body-width) 2))))
+      (setq-default left-margin-width margin)
+      (setq-default right-margin-width margin)))
+  ;; Refresh
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when (get-buffer-window buf)
+        (set-window-buffer (get-buffer-window buf) buf)))))
+
+(defun ia-writer--disable ()
+  "Deactivate zen writing environment, restoring saved state."
+  ;; Olivetti
+  (when (ia-writer--restore 'olivetti)
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (bound-and-true-p olivetti-mode)
+          (olivetti-mode -1)))))
+  ;; Margins
+  (let ((lm (ia-writer--restore 'left-margin))
+        (rm (ia-writer--restore 'right-margin)))
+    (when lm (setq-default left-margin-width lm))
+    (when rm (setq-default right-margin-width rm)))
+  ;; UI chrome
+  (let ((sb (ia-writer--restore 'scroll-bar-mode))
+        (tb (ia-writer--restore 'tool-bar-mode))
+        (mb (ia-writer--restore 'menu-bar-mode)))
+    (when sb (scroll-bar-mode 1))
+    (when tb (tool-bar-mode 1))
+    (when mb (menu-bar-mode 1)))
+  ;; Mode line
+  (let ((ml (ia-writer--restore 'mode-line-format)))
+    (when ml (setq-default mode-line-format ml)))
+  ;; Line spacing
+  (let ((ls (ia-writer--restore 'line-spacing)))
+    (setq-default line-spacing ls))
+  ;; Font
+  (let ((family (ia-writer--restore 'font))
+        (size (ia-writer--restore 'font-size)))
+    (when family
+      (set-face-attribute 'default nil
+                          :family family
+                          :height (or size ia-writer-font-size))))
+  ;; Theme
+  (when (ia-writer--restore 'theme)
+    (disable-theme 'ia-writer))
+  ;; Refresh
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when (get-buffer-window buf)
+        (set-window-buffer (get-buffer-window buf) buf)))))
+
 (provide 'ia-writer)
 
 ;;; ia-writer.el ends here
