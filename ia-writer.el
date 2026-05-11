@@ -28,22 +28,22 @@
   :group 'faces
   :prefix "ia-writer-")
 
-(defcustom ia-writer-font-family "IBM Plex Mono"
+(defcustom ia-writer-font-family "Maple Mono CN"
   "Font family used by `ia-writer-mode'."
   :type 'string
   :group 'ia-writer)
 
-(defcustom ia-writer-font-size 140
+(defcustom ia-writer-font-size 200
   "Font size in 1/10pt used by `ia-writer-mode'."
   :type 'integer
   :group 'ia-writer)
 
-(defcustom ia-writer-line-spacing 0.5
-  "Extra line spacing set by `ia-writer-mode'."
+(defcustom ia-writer-line-spacing 8
+  "Extra line spacing in pixels set by `ia-writer-mode'."
   :type 'number
   :group 'ia-writer)
 
-(defcustom ia-writer-body-width 80
+(defcustom ia-writer-body-width 100
   "Text body width in columns for centering."
   :type 'integer
   :group 'ia-writer)
@@ -68,7 +68,7 @@ When nil, auto-detected from `font-lock-comment-face'."
 (defun ia-writer--find-font ()
   "Return the first available font from preferred list."
   (seq-find (lambda (f) (member f (font-family-list)))
-            (list ia-writer-font-family "IBM Plex Mono" "Menlo" "Consolas" "Courier New")))
+            (list ia-writer-font-family "Maple Mono CN" "iA Writer Quattro S" "Menlo" "Consolas" "Courier New")))
 
 (defun ia-writer--save (key value)
   "Save KEY with VALUE to the saved state alist."
@@ -99,8 +99,7 @@ When nil, auto-detected from `font-lock-comment-face'."
   (let ((font (ia-writer--find-font)))
     (when font
       (ia-writer--save 'font (face-attribute 'default :family))
-      (ia-writer--save 'font-size (face-attribute 'default :height))
-      (set-face-attribute 'default nil :family font :height ia-writer-font-size)))
+      (set-face-attribute 'default nil :family font)))
   ;; Line spacing
   (ia-writer--save 'line-spacing (default-value 'line-spacing))
   (setq-default line-spacing ia-writer-line-spacing)
@@ -114,6 +113,19 @@ When nil, auto-detected from `font-lock-comment-face'."
   (scroll-bar-mode -1)
   (tool-bar-mode -1)
   (menu-bar-mode -1)
+  ;; Disable org-bars-mode if present
+  (when (fboundp 'org-bars-mode)
+    (ia-writer--save 'org-bars (member 'org-bars-mode org-mode-hook))
+    (remove-hook 'org-mode-hook #'org-bars-mode)
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (bound-and-true-p org-bars-mode)
+          (org-bars-mode -1)))))
+  ;; Disable org-modern-mode if present
+  (when (fboundp 'global-org-modern-mode)
+    (ia-writer--save 'org-modern (bound-and-true-p global-org-modern-mode))
+    (when (bound-and-true-p global-org-modern-mode)
+      (global-org-modern-mode -1)))
   ;; Centering
   (if (require 'olivetti nil t)
       (progn
@@ -121,7 +133,8 @@ When nil, auto-detected from `font-lock-comment-face'."
         (setq olivetti-body-width ia-writer-body-width)
         (dolist (buf (buffer-list))
           (with-current-buffer buf
-            (olivetti-mode 1))))
+            (olivetti-mode 1)))
+        (add-hook 'after-change-major-mode-hook #'ia-writer--enable-olivetti))
     (ia-writer--save 'left-margin (default-value 'left-margin-width))
     (ia-writer--save 'right-margin (default-value 'right-margin-width))
     (let ((margin (max 0 (/ (- (window-total-width) ia-writer-body-width) 2))))
@@ -133,9 +146,25 @@ When nil, auto-detected from `font-lock-comment-face'."
       (when (get-buffer-window buf)
         (set-window-buffer (get-buffer-window buf) buf)))))
 
+(defun ia-writer--enable-olivetti ()
+  "Enable olivetti in the current buffer if `ia-writer-mode' is active."
+  (when (and ia-writer-mode (not (bound-and-true-p olivetti-mode)))
+    (olivetti-mode 1)))
+
 (defun ia-writer--disable ()
   "Deactivate zen writing environment, restoring saved state."
+  ;; Restore org-bars-mode if it was active
+  (when (and (fboundp 'org-bars-mode) (ia-writer--restore 'org-bars))
+    (add-hook 'org-mode-hook #'org-bars-mode)
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (derived-mode-p 'org-mode)
+          (org-bars-mode 1)))))
+  ;; Restore org-modern-mode if it was active
+  (when (and (fboundp 'global-org-modern-mode) (ia-writer--restore 'org-modern))
+    (global-org-modern-mode 1))
   ;; Olivetti
+  (remove-hook 'after-change-major-mode-hook #'ia-writer--enable-olivetti)
   (when (ia-writer--restore 'olivetti)
     (dolist (buf (buffer-list))
       (with-current-buffer buf
@@ -160,12 +189,9 @@ When nil, auto-detected from `font-lock-comment-face'."
   (let ((ls (ia-writer--restore 'line-spacing)))
     (setq-default line-spacing ls))
   ;; Font
-  (let ((family (ia-writer--restore 'font))
-        (size (ia-writer--restore 'font-size)))
+  (let ((family (ia-writer--restore 'font)))
     (when family
-      (set-face-attribute 'default nil
-                          :family family
-                          :height (or size ia-writer-font-size))))
+      (set-face-attribute 'default nil :family family)))
   ;; Theme
   (when (ia-writer--restore 'theme)
     (disable-theme 'ia-writer))
@@ -247,6 +273,11 @@ When nil, auto-detected from `font-lock-comment-face'."
     (when ia-writer--focus-after-ov
       (delete-overlay ia-writer--focus-after-ov)
       (setq ia-writer--focus-after-ov nil))))
+
+;;;###autoload
+(define-globalized-minor-mode global-ia-writer-focus-mode
+  ia-writer-focus-mode
+  (lambda () (ia-writer-focus-mode 1)))
 
 (provide 'ia-writer)
 
