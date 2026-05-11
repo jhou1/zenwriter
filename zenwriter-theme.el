@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.2.1
+;; Version: 0.2.2
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, themes
 ;; URL: https://github.com/jhou1/zenwriter-mode
@@ -47,8 +47,8 @@
 ;; --- Tier 1: Search, status, borders ---
 (custom-theme-set-faces
  'zenwriter
- '(highlight ((((background light)) (:background "#C1E7F4"))
-              (((background dark))  (:background "#2A3A40"))))
+ '(highlight ((((background light)) (:background "#E0E0E0"))
+              (((background dark))  (:background "#2A2C2D"))))
  '(lazy-highlight ((((background light)) (:background "#C1E7F4"))
                    (((background dark))  (:background "#2A3A40"))))
  '(isearch ((((background light)) (:background "#C3E9DB" :foreground "#424242"))
@@ -215,6 +215,14 @@
               (((background dark))  (:foreground "#C5C9C6"))))
  '(org-checkbox ((((background light)) (:foreground "#424242" :weight bold))
                  (((background dark))  (:foreground "#C5C9C6" :weight bold)))))
+
+;; --- Completion frameworks ---
+(custom-theme-set-faces
+ 'zenwriter
+ '(completions-highlight ((((background light)) (:background "#E0E0E0"))
+                          (((background dark))  (:background "#2A2C2D"))))
+ '(vertico-current ((((background light)) (:background "#E0E0E0"))
+                    (((background dark))  (:background "#2A2C2D")))))
 
 (provide-theme 'zenwriter)
 
