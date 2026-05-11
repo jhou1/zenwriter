@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, themes
 ;; URL: https://github.com/jhou1/zenwriter-mode
@@ -173,10 +173,10 @@
                 (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(org-level-8 ((((background light)) (:foreground "#424242" :weight bold))
                 (((background dark))  (:foreground "#C5C9C6" :weight bold))))
- '(org-todo ((((background light)) (:foreground "#AF5FFF" :weight bold))
-             (((background dark))  (:foreground "#B893BE" :weight bold))))
- '(org-done ((((background light)) (:foreground "#87D7AF" :weight bold))
-             (((background dark))  (:foreground "#B1BE5A" :weight bold))))
+ '(org-todo ((((background light)) (:foreground "#424242" :weight bold))
+             (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ '(org-done ((((background light)) (:foreground "#9E9E9E" :weight bold))
+             (((background dark))  (:foreground "#525252" :weight bold))))
  '(org-headline-done ((((background light)) (:foreground "#9E9E9E"))
                       (((background dark))  (:foreground "#525252")))))
 
