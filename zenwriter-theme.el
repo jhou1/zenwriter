@@ -1,11 +1,11 @@
-;;; zen-writer-theme.el --- Zen Writer inspired theme for Emacs -*- lexical-binding: t; no-native-compile: t; -*-
+;;; zenwriter-theme.el --- Zenwriter theme for distraction-free writing -*- lexical-binding: t; no-native-compile: t; -*-
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.1.3
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, themes
-;; URL: https://github.com/jhou1/zen-writer
+;; URL: https://github.com/jhou1/zenwriter-mode
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 
 ;;; Code:
 
-(deftheme zen-writer "Zen Writer inspired theme for distraction-free writing.")
+(deftheme zenwriter "Zenwriter theme for distraction-free writing.")
 
 ;; --- Tier 1: Core Emacs faces ---
 (custom-theme-set-faces
- 'zen-writer
+ 'zenwriter
  '(default ((((background light)) (:background "#F5F6F6" :foreground "#424242"))
             (((background dark))  (:background "#1D1F20" :foreground "#C5C9C6"))))
  '(cursor ((((background light)) (:background "#00BAFF"))
@@ -46,7 +46,7 @@
 
 ;; --- Tier 1: Search, status, borders ---
 (custom-theme-set-faces
- 'zen-writer
+ 'zenwriter
  '(highlight ((((background light)) (:background "#C1E7F4"))
               (((background dark))  (:background "#2A3A40"))))
  '(lazy-highlight ((((background light)) (:background "#C1E7F4"))
@@ -82,7 +82,7 @@
 
 ;; --- Tier 3: Font-lock faces ---
 (custom-theme-set-faces
- 'zen-writer
+ 'zenwriter
  '(font-lock-comment-face ((((background light)) (:foreground "#9E9E9E" :slant italic))
                            (((background dark))  (:foreground "#525252" :slant italic))))
  '(font-lock-comment-delimiter-face ((((background light)) (:foreground "#9E9E9E" :slant italic))
@@ -112,7 +112,7 @@
 
 ;; --- Tier 2: Markdown mode faces ---
 (custom-theme-set-faces
- 'zen-writer
+ 'zenwriter
  '(markdown-header-face ((((background light)) (:foreground "#424242" :weight bold))
                          (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(markdown-header-face-1 ((((background light)) (:foreground "#424242" :weight bold))
@@ -156,7 +156,7 @@
 
 ;; --- Tier 2: Org mode faces ---
 (custom-theme-set-faces
- 'zen-writer
+ 'zenwriter
  '(org-level-1 ((((background light)) (:foreground "#424242" :weight bold))
                 (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(org-level-2 ((((background light)) (:foreground "#424242" :weight bold))
@@ -182,7 +182,7 @@
 
 ;; --- Tier 2: Org mode faces (continued) ---
 (custom-theme-set-faces
- 'zen-writer
+ 'zenwriter
  '(org-link ((((background light)) (:foreground "#6C6C6C" :underline (:color "#BCBCBC" :style line)))
              (((background dark))  (:foreground "#909090" :underline (:color "#525252" :style line)))))
  '(org-date ((((background light)) (:foreground "#6C6C6C"))
@@ -216,6 +216,7 @@
  '(org-checkbox ((((background light)) (:foreground "#424242" :weight bold))
                  (((background dark))  (:foreground "#C5C9C6" :weight bold)))))
 
-(provide-theme 'zen-writer)
+(provide-theme 'zenwriter)
 
-;;; zen-writer-theme.el ends here
+;;; zenwriter-theme.el ends here
+

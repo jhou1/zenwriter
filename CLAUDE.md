@@ -8,7 +8,7 @@ An Emacs color theme that replicates iA Writer's distraction-free writing aesthe
 
 ## Architecture
 
-Single-file Emacs theme (`ia-writer-theme.el`) following Emacs `deftheme` / `custom-theme-set-faces` conventions. Should support both light and dark variants. Pair with `writeroom-mode` or `olivetti-mode` for the full distraction-free layout (centered text, hidden modeline, fullscreen).
+Two-file Emacs package: `zenwriter-theme.el` (color theme) and `zenwriter-mode.el` (companion modes). Follows Emacs `deftheme` / `custom-theme-set-faces` conventions. Supports both light and dark variants. Pairs with `olivetti-mode` for centered text layout.
 
 ## iA Writer Design Reference
 
@@ -69,21 +69,21 @@ Single-file Emacs theme (`ia-writer-theme.el`) following Emacs `deftheme` / `cus
 
 ```bash
 # Load theme in running Emacs
-emacs -Q -l ia-writer-theme.el
+emacs -Q -l zenwriter-mode.el
 
 # Batch byte-compile (should produce no warnings)
-emacs --batch -f batch-byte-compile ia-writer-theme.el
+emacs --batch -f batch-byte-compile zenwriter-mode.el
 
 # Lint with package-lint (if installed)
-emacs --batch -l package-lint -f package-lint-batch-and-exit ia-writer-theme.el
+emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
 ```
 
 ## Conventions
 
 - All faces must specify both `:background` and `:foreground` where applicable, or use `unspecified` to inherit
 - Use `deftheme` + `custom-theme-set-faces`, not the legacy `defface` approach
-- Support `(load-theme 'ia-writer t)` as the entry point
-- Provide light variant as default; dark variant via `ia-writer-dark` or class-based detection
+- Support `(load-theme 'zenwriter t)` as the entry point
+- Provide light variant as default; dark variant via class-based detection
 - Markdown/Org mode faces are first-class citizens — these are writing modes
 - Minimize use of bold/underline — the aesthetic is restrained
 - The modeline should be ultra-minimal (thin line or invisible) to match iA Writer's chrome-free design

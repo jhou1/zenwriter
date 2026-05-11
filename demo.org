@@ -82,7 +82,7 @@ background and text.
 Configuration is minimal. In Emacs, a single line suffices:
 
 #+BEGIN_SRC emacs-lisp
-(global-zen-writer-mode)
+(global-zenwriter-mode)
 #+END_SRC
 
 For more on building a writing environment, see the
