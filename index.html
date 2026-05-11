@@ -13,10 +13,29 @@ body {
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
+.banner {
+  background: #1D1F20;
+  padding: 10px 24px;
+  text-align: center;
+  font-size: 0.85em;
+}
+.banner a {
+  color: #C5C9C6;
+  text-decoration: none;
+}
+.banner a:hover { color: #fff; }
+.banner svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 6px;
+  fill: #C5C9C6;
+}
+.banner a:hover svg { fill: #fff; }
 .page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 80px 24px;
+  padding: 64px 24px 80px;
 }
 h1 {
   font-size: 1.6em;
@@ -36,6 +55,13 @@ h2 {
   margin-top: 48px;
   margin-bottom: 12px;
   color: #333;
+}
+h3 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 8px;
+  color: #555;
 }
 p, ul, ol { margin-bottom: 16px; }
 ul { padding-left: 20px; }
@@ -59,13 +85,26 @@ pre {
 }
 pre code { background: none; padding: 0; color: inherit; }
 a { color: #424242; }
-.features { list-style: none; padding: 0; }
-.features li { padding-left: 0; }
-.features li::before { content: none; }
 hr {
   border: none;
   border-top: 1px solid #e0e0e0;
   margin: 48px 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 0.9em;
+}
+th {
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+  padding: 8px 10px;
+}
+td {
+  border-bottom: 1px solid #eee;
+  padding: 8px 10px;
 }
 .footer {
   margin-top: 64px;
@@ -153,41 +192,71 @@ hr {
 </style>
 </head>
 <body>
+
+<div class="banner">
+  <a href="https://github.com/jhou1/zenwriter-mode">
+    <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>View on GitHub
+  </a>
+</div>
+
 <div class="page">
 
 <h1>zenwriter-mode</h1>
-<p class="subtitle">Distraction-free writing for Emacs, inspired by <a href="https://ia.net/writer">iA Writer</a>.</p>
+<p class="subtitle">Distraction-free writing for Emacs, inspired by <a href="https://ia.net/writer">iA Writer</a>. Monochromatic color theme with a signature blue cursor, zen writing modes, and visual-line focus dimming.</p>
 
 <div class="compare" id="compare">
   <img class="img-dark" src="dark.png" alt="Dark mode" draggable="false">
   <img class="img-light" src="light.png" alt="Light mode" draggable="false">
   <div class="divider"></div>
   <div class="handle">
-    <svg viewBox="0 0 24 24"><path d="M8 5l-5 7 5 7M16 5l5 7-5 7"/><path d="M8 5l-5 7 5 7" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 5l5 7-5 7" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M8 5l-5 7 5 7" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 5l5 7-5 7" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
   <span class="label label-light">Light</span>
   <span class="label label-dark">Dark</span>
 </div>
 
-<ul class="features">
-  <li>Light and dark themes &mdash; auto-detected from system appearance</li>
-  <li>Olivetti centering, generous line spacing, hidden chrome</li>
-  <li>Focus mode &mdash; dims all text except the current line</li>
-  <li>First-class Org and Markdown faces</li>
-  <li>One command to enable, one to restore</li>
+<h2>Features</h2>
+
+<p><strong>Color theme</strong> (<code>zenwriter-theme.el</code>)</p>
+<ul>
+  <li>Light and dark variants, auto-detected from your frame background</li>
+  <li>Monochromatic grays for light mode, subtle muted colors for dark mode</li>
+  <li>First-class Org mode and Markdown faces &mdash; headings are bold, same size as body text</li>
+  <li>Subtle link underlines for discoverability without visual noise</li>
+  <li>Invisible modeline</li>
+</ul>
+
+<p><strong>Zen writing mode</strong> (<code>zenwriter-mode.el</code>)</p>
+<ul>
+  <li><code>zenwriter-mode</code> (buffer-local) &mdash; olivetti centering + generous line spacing</li>
+  <li><code>global-zenwriter-mode</code> &mdash; full zen: loads theme, sets font, hides toolbar/scrollbar/menubar/modeline, disables org-bars and org-modern if present, enables <code>zenwriter-mode</code> in all buffers. Toggling off restores your previous themes and settings.</li>
+</ul>
+
+<p><strong>Focus mode</strong></p>
+<ul>
+  <li><code>zenwriter-focus-mode</code> (buffer-local) &mdash; dims all text except the current visual line</li>
+  <li><code>global-zenwriter-focus-mode</code> &mdash; focus mode in all buffers</li>
 </ul>
 
 <hr>
 
-<h2>Quick start</h2>
+<h2>Prerequisites</h2>
 
-<pre><code>;; Load the theme only
-(load-theme 'zenwriter t)
+<h3>Font: Maple Mono CN</h3>
 
-;; Full experience &mdash; theme, font, hidden chrome
-(global-zenwriter-mode 1)</code></pre>
+<p>The theme uses <a href="https://github.com/subframe7536/maple-font">Maple Mono CN</a> by default. Install it before using <code>global-zenwriter-mode</code>.</p>
 
-<h2>Install</h2>
+<p><strong>macOS (Homebrew):</strong></p>
+<pre><code>brew install --cask font-maple-mono-cn</code></pre>
+
+<p><strong>Manual download:</strong></p>
+<p>Download from <a href="https://github.com/subframe7536/maple-font/releases">Maple Font releases</a> and install the <code>MapleMono-CN-*.ttf</code> files to your system fonts directory.</p>
+
+<p>If you prefer a different font, set <code>zenwriter-font-family</code> before enabling the mode.</p>
+
+<h2>Installation</h2>
+
+<h3>straight.el + use-package</h3>
 
 <pre><code>(use-package zenwriter-mode
   :straight (zenwriter-mode
@@ -195,21 +264,63 @@ hr {
     :host github
     :repo "jhou1/zenwriter-mode"
     :files ("*.el"))
-  :commands (zenwriter-mode global-zenwriter-mode)
+  :commands (zenwriter-mode global-zenwriter-mode
+             zenwriter-focus-mode global-zenwriter-focus-mode)
   :init
   (add-to-list 'custom-theme-load-path
-    (expand-file-name "straight/repos/zenwriter-mode"
-                      user-emacs-directory)))</code></pre>
+               (expand-file-name "straight/repos/zenwriter-mode"
+                                 user-emacs-directory)))</code></pre>
 
-<h2>Customize</h2>
+<h3>Manual</h3>
+
+<pre><code>git clone https://github.com/jhou1/zenwriter-mode /path/to/zenwriter-mode</code></pre>
+
+<p>Add to your <code>init.el</code> or <code>.emacs</code>:</p>
+
+<pre><code>(add-to-list 'custom-theme-load-path "/path/to/zenwriter-mode")
+(add-to-list 'load-path "/path/to/zenwriter-mode")
+(require 'zenwriter-mode)</code></pre>
+
+<h2>Usage</h2>
+
+<pre><code>;; Just the color theme
+(load-theme 'zenwriter t)
+
+;; Zen mode in the current buffer
+(zenwriter-mode 1)
+
+;; Full zen experience &mdash; all buffers, theme, font, hidden chrome
+(global-zenwriter-mode 1)
+
+;; Focus mode &mdash; dim everything except the current line
+(global-zenwriter-focus-mode 1)</code></pre>
+
+<p>Toggle off with the same commands (or pass <code>-1</code>). <code>global-zenwriter-mode</code> restores your previous themes and UI state when disabled.</p>
+
+<h2>Customization</h2>
+
+<table>
+  <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+  <tr><td><code>zenwriter-font-family</code></td><td><code>"Maple Mono CN"</code></td><td>Font set by <code>global-zenwriter-mode</code></td></tr>
+  <tr><td><code>zenwriter-line-spacing</code></td><td><code>8</code></td><td>Extra line spacing in pixels</td></tr>
+  <tr><td><code>zenwriter-body-width</code></td><td><code>100</code></td><td>Text body width in columns (olivetti)</td></tr>
+  <tr><td><code>zenwriter-focus-dimmed-color</code></td><td><code>nil</code> (auto)</td><td>Foreground color for dimmed text; when nil, reads from <code>font-lock-comment-face</code></td></tr>
+</table>
+
+<p>Example:</p>
 
 <pre><code>(setq zenwriter-font-family "Iosevka")
 (setq zenwriter-body-width 90)
 (setq zenwriter-line-spacing 6)</code></pre>
 
+<h2>Optional dependencies</h2>
+
+<ul>
+  <li><a href="https://github.com/rnkn/olivetti">olivetti</a> &mdash; text centering (detected at runtime, falls back to window margins)</li>
+</ul>
+
 <p class="footer">
-  Emacs 26.1+ &middot; <a href="https://github.com/subframe7536/maple-font">Maple Mono CN</a> font &middot; GPL-3.0<br>
-  <a href="https://github.com/jhou1/zenwriter-mode">Source on GitHub</a>
+  Emacs 26.1+ &middot; GPL-3.0
 </p>
 
 </div>
