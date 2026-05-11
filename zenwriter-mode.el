@@ -110,6 +110,13 @@ When nil, auto-detected from `font-lock-comment-face'."
               (string-prefix-p " " (buffer-name)))
     (zenwriter-mode 1)))
 
+;; Ivy face accumulation fix: ivy mutates candidate strings in place,
+;; so face properties (like ivy-current-match) persist across display
+;; updates, causing previously selected candidates to stay highlighted.
+(defun zenwriter--ivy-format-copy-cands (orig-fn cands)
+  "Copy candidate strings before formatting to prevent face accumulation."
+  (funcall orig-fn (mapcar #'copy-sequence cands)))
+
 ;;;###autoload
 (define-minor-mode global-zenwriter-mode
   "Global minor mode for the full zenwriter experience."
@@ -169,6 +176,9 @@ When nil, auto-detected from `font-lock-comment-face'."
     (zenwriter--global-save 'org-modern (bound-and-true-p global-org-modern-mode))
     (when (bound-and-true-p global-org-modern-mode)
       (global-org-modern-mode -1)))
+  ;; Fix ivy face accumulation
+  (when (fboundp 'ivy--format)
+    (advice-add 'ivy--format :around #'zenwriter--ivy-format-copy-cands))
   ;; Enable zenwriter-mode in all existing buffers and future ones
   (dolist (buf (buffer-list))
     (with-current-buffer buf
@@ -214,6 +224,8 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
     (let ((prev (zenwriter--global-restore 'appearance-hook)))
       (when prev
         (setq ns-system-appearance-change-functions prev))))
+  ;; Remove ivy face accumulation fix
+  (advice-remove 'ivy--format #'zenwriter--ivy-format-copy-cands)
   ;; Disable zenwriter-mode in all buffers
   (remove-hook 'after-change-major-mode-hook #'zenwriter--turn-on)
   (dolist (buf (buffer-list))
@@ -316,7 +328,9 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
 
 (defun zenwriter--focus-turn-on ()
   "Turn on `zenwriter-focus-mode' in the current buffer."
-  (zenwriter-focus-mode 1))
+  (unless (or (minibufferp)
+              (string-prefix-p " " (buffer-name)))
+    (zenwriter-focus-mode 1)))
 
 ;;;###autoload
 (define-globalized-minor-mode global-zenwriter-focus-mode

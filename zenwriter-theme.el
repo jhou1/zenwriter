@@ -47,8 +47,10 @@
 ;; --- Tier 1: Search, status, borders ---
 (custom-theme-set-faces
  'zenwriter
- '(highlight ((((background light)) (:background "#E0E0E0"))
-              (((background dark))  (:background "#2A2C2D"))))
+ '(highlight ((((background light)) (:background "#E0E0E0" :extend nil))
+              (((background dark))  (:background "#2A2C2D" :extend nil))))
+ '(match ((((background light)) (:foreground "#424242" :weight bold))
+          (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(lazy-highlight ((((background light)) (:background "#C1E7F4"))
                    (((background dark))  (:background "#2A3A40"))))
  '(isearch ((((background light)) (:background "#C3E9DB" :foreground "#424242"))
@@ -219,14 +221,14 @@
 ;; --- Completion frameworks ---
 (custom-theme-set-faces
  'zenwriter
- '(completions-highlight ((((background light)) (:background "#E0E0E0"))
-                          (((background dark))  (:background "#2A2C2D"))))
+ '(completions-highlight ((((background light)) (:background "#B3E2F2" :extend t))
+                          (((background dark))  (:background "#3A4A50" :extend t))))
  '(completions-common-part ((((background light)) (:foreground "#424242"))
                             (((background dark))  (:foreground "#C5C9C6"))))
  '(completions-first-difference ((((background light)) (:foreground "#424242" :weight bold))
                                  (((background dark))  (:foreground "#C5C9C6" :weight bold))))
- '(vertico-current ((((background light)) (:background "#E0E0E0"))
-                    (((background dark))  (:background "#2A2C2D"))))
+ '(vertico-current ((((background light)) (:background "#B3E2F2" :extend t))
+                    (((background dark))  (:background "#3A4A50" :extend t))))
  '(orderless-match-face-0 ((((background light)) (:foreground "#424242" :weight bold))
                            (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(orderless-match-face-1 ((((background light)) (:foreground "#424242" :weight bold))
@@ -236,16 +238,16 @@
  '(orderless-match-face-3 ((((background light)) (:foreground "#424242" :weight bold))
                            (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  ;; --- Ivy / Counsel ---
- '(ivy-current-match ((((background light)) (:background "#E0E0E0" :foreground "#424242"))
-                      (((background dark))  (:background "#2A2C2D" :foreground "#C5C9C6"))))
- '(ivy-minibuffer-match-face-1 ((((background light)) (:background unspecified :foreground "#424242"))
-                                (((background dark))  (:background unspecified :foreground "#C5C9C6"))))
- '(ivy-minibuffer-match-face-2 ((((background light)) (:background unspecified :foreground "#424242" :weight bold))
-                                (((background dark))  (:background unspecified :foreground "#C5C9C6" :weight bold))))
- '(ivy-minibuffer-match-face-3 ((((background light)) (:background unspecified :foreground "#424242" :weight bold))
-                                (((background dark))  (:background unspecified :foreground "#C5C9C6" :weight bold))))
- '(ivy-minibuffer-match-face-4 ((((background light)) (:background unspecified :foreground "#424242" :weight bold))
-                                (((background dark))  (:background unspecified :foreground "#C5C9C6" :weight bold)))))
+ '(ivy-current-match ((((background light)) (:background "#B3E2F2" :foreground "#424242" :extend t))
+                      (((background dark))  (:background "#3A4A50" :foreground "#C5C9C6" :extend t))))
+ '(ivy-minibuffer-match-face-1 ((((background light)) (:foreground "#424242"))
+                                (((background dark))  (:foreground "#C5C9C6"))))
+ '(ivy-minibuffer-match-face-2 ((((background light)) (:foreground "#424242" :weight bold))
+                                (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ '(ivy-minibuffer-match-face-3 ((((background light)) (:foreground "#424242" :weight bold))
+                                (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ '(ivy-minibuffer-match-face-4 ((((background light)) (:foreground "#424242" :weight bold))
+                                (((background dark))  (:foreground "#C5C9C6" :weight bold)))))
 
 (provide-theme 'zenwriter)
 

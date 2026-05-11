@@ -87,3 +87,4 @@ emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
 - Markdown/Org mode faces are first-class citizens — these are writing modes
 - Minimize use of bold/underline — the aesthetic is restrained
 - The modeline should be ultra-minimal (thin line or invisible) to match iA Writer's chrome-free design
+- Test and verify the features and bugfixes
