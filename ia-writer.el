@@ -15,9 +15,10 @@
 ;;; Commentary:
 
 ;; Companion modes for the ia-writer theme.
-;; `ia-writer-mode' transforms the Emacs frame into a distraction-free
-;; writing environment.  `ia-writer-focus-mode' dims all text except
-;; the active sentence or paragraph.
+;; `ia-writer-mode' (buffer-local) enables olivetti centering and line spacing.
+;; `global-ia-writer-mode' enables the full zen experience globally:
+;; theme, font, hidden chrome, and ia-writer-mode in all buffers.
+;; `ia-writer-focus-mode' dims all text except the current visual line.
 
 ;;; Code:
 
@@ -29,12 +30,12 @@
   :prefix "ia-writer-")
 
 (defcustom ia-writer-font-family "Maple Mono CN"
-  "Font family used by `ia-writer-mode'."
+  "Font family used by `global-ia-writer-mode'."
   :type 'string
   :group 'ia-writer)
 
 (defcustom ia-writer-font-size 200
-  "Font size in 1/10pt used by `ia-writer-mode'."
+  "Font size in 1/10pt used by `global-ia-writer-mode'."
   :type 'integer
   :group 'ia-writer)
 
@@ -48,13 +49,6 @@
   :type 'integer
   :group 'ia-writer)
 
-(defcustom ia-writer-focus-unit 'sentence
-  "Unit of focus in `ia-writer-focus-mode'.
-Either `sentence' or `paragraph'."
-  :type '(choice (const :tag "Sentence" sentence)
-                 (const :tag "Paragraph" paragraph))
-  :group 'ia-writer)
-
 (defcustom ia-writer-focus-dimmed-color nil
   "Foreground color for dimmed text in focus mode.
 When nil, auto-detected from `font-lock-comment-face'."
@@ -62,60 +56,87 @@ When nil, auto-detected from `font-lock-comment-face'."
                  (string :tag "Color hex"))
   :group 'ia-writer)
 
-(defvar ia-writer--saved-state nil
-  "Alist of saved settings to restore when `ia-writer-mode' is disabled.")
+;;; --- ia-writer-mode (buffer-local) ---
+
+(defvar-local ia-writer--saved-line-spacing nil
+  "Saved line-spacing to restore when `ia-writer-mode' is disabled.")
+
+;;;###autoload
+(define-minor-mode ia-writer-mode
+  "Buffer-local minor mode for iA Writer zen writing."
+  :lighter nil
+  (if ia-writer-mode
+      (progn
+        (setq ia-writer--saved-line-spacing line-spacing)
+        (setq line-spacing ia-writer-line-spacing)
+        (when (and (require 'olivetti nil t)
+                   (not (minibufferp))
+                   (not (string-prefix-p " " (buffer-name))))
+          (setq olivetti-body-width ia-writer-body-width)
+          (olivetti-mode 1)))
+    (setq line-spacing ia-writer--saved-line-spacing)
+    (when (bound-and-true-p olivetti-mode)
+      (olivetti-mode -1))))
+
+;;; --- global-ia-writer-mode ---
+
+(defvar ia-writer--global-saved-state nil
+  "Alist of saved global settings for `global-ia-writer-mode'.")
+
+(defun ia-writer--global-save (key value)
+  "Save KEY with VALUE to the global saved state alist."
+  (setf (alist-get key ia-writer--global-saved-state) value))
+
+(defun ia-writer--global-restore (key)
+  "Restore and remove KEY from global saved state."
+  (let ((val (alist-get key ia-writer--global-saved-state)))
+    (setf (alist-get key ia-writer--global-saved-state nil t) nil)
+    val))
 
 (defun ia-writer--find-font ()
   "Return the first available font from preferred list."
   (seq-find (lambda (f) (member f (font-family-list)))
             (list ia-writer-font-family "Maple Mono CN" "iA Writer Quattro S" "Menlo" "Consolas" "Courier New")))
 
-(defun ia-writer--save (key value)
-  "Save KEY with VALUE to the saved state alist."
-  (setf (alist-get key ia-writer--saved-state) value))
-
-(defun ia-writer--restore (key)
-  "Restore and remove KEY from saved state. Returns the saved value."
-  (let ((val (alist-get key ia-writer--saved-state)))
-    (setf (alist-get key ia-writer--saved-state nil t) nil)
-    val))
+(defun ia-writer--turn-on ()
+  "Turn on `ia-writer-mode' in the current buffer if appropriate."
+  (unless (or (minibufferp)
+              (string-prefix-p " " (buffer-name)))
+    (ia-writer-mode 1)))
 
 ;;;###autoload
-(define-minor-mode ia-writer-mode
-  "Global minor mode for iA Writer zen writing experience."
+(define-minor-mode global-ia-writer-mode
+  "Global minor mode for the full iA Writer zen experience."
   :global t
   :lighter nil
-  (if ia-writer-mode
-      (ia-writer--enable)
-    (ia-writer--disable)))
+  (if global-ia-writer-mode
+      (ia-writer--global-enable)
+    (ia-writer--global-disable)))
 
-(defun ia-writer--enable ()
-  "Activate zen writing environment."
-  ;; Theme
-  (unless (member 'ia-writer custom-enabled-themes)
-    (ia-writer--save 'theme t)
-    (load-theme 'ia-writer t))
+(defun ia-writer--global-enable ()
+  "Activate the full zen writing environment."
+  ;; Theme — disable all other themes, then load ia-writer
+  (ia-writer--global-save 'previous-themes (copy-sequence custom-enabled-themes))
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'ia-writer t)
   ;; Font
   (let ((font (ia-writer--find-font)))
     (when font
-      (ia-writer--save 'font (face-attribute 'default :family))
+      (ia-writer--global-save 'font (face-attribute 'default :family))
       (set-face-attribute 'default nil :family font)))
-  ;; Line spacing
-  (ia-writer--save 'line-spacing (default-value 'line-spacing))
-  (setq-default line-spacing ia-writer-line-spacing)
   ;; Mode line
-  (ia-writer--save 'mode-line-format (default-value 'mode-line-format))
+  (ia-writer--global-save 'mode-line-format (default-value 'mode-line-format))
   (setq-default mode-line-format (list " "))
   ;; UI chrome
-  (ia-writer--save 'scroll-bar-mode scroll-bar-mode)
-  (ia-writer--save 'tool-bar-mode tool-bar-mode)
-  (ia-writer--save 'menu-bar-mode menu-bar-mode)
+  (ia-writer--global-save 'scroll-bar-mode scroll-bar-mode)
+  (ia-writer--global-save 'tool-bar-mode tool-bar-mode)
+  (ia-writer--global-save 'menu-bar-mode menu-bar-mode)
   (scroll-bar-mode -1)
   (tool-bar-mode -1)
   (menu-bar-mode -1)
   ;; Disable org-bars-mode if present
   (when (fboundp 'org-bars-mode)
-    (ia-writer--save 'org-bars (member 'org-bars-mode org-mode-hook))
+    (ia-writer--global-save 'org-bars (member 'org-bars-mode org-mode-hook))
     (remove-hook 'org-mode-hook #'org-bars-mode)
     (dolist (buf (buffer-list))
       (with-current-buffer buf
@@ -123,83 +144,54 @@ When nil, auto-detected from `font-lock-comment-face'."
           (org-bars-mode -1)))))
   ;; Disable org-modern-mode if present
   (when (fboundp 'global-org-modern-mode)
-    (ia-writer--save 'org-modern (bound-and-true-p global-org-modern-mode))
+    (ia-writer--global-save 'org-modern (bound-and-true-p global-org-modern-mode))
     (when (bound-and-true-p global-org-modern-mode)
       (global-org-modern-mode -1)))
-  ;; Centering
-  (if (require 'olivetti nil t)
-      (progn
-        (ia-writer--save 'olivetti t)
-        (setq olivetti-body-width ia-writer-body-width)
-        (dolist (buf (buffer-list))
-          (with-current-buffer buf
-            (olivetti-mode 1)))
-        (add-hook 'after-change-major-mode-hook #'ia-writer--enable-olivetti))
-    (ia-writer--save 'left-margin (default-value 'left-margin-width))
-    (ia-writer--save 'right-margin (default-value 'right-margin-width))
-    (let ((margin (max 0 (/ (- (window-total-width) ia-writer-body-width) 2))))
-      (setq-default left-margin-width margin)
-      (setq-default right-margin-width margin)))
-  ;; Refresh
+  ;; Enable ia-writer-mode in all existing buffers and future ones
   (dolist (buf (buffer-list))
     (with-current-buffer buf
-      (when (get-buffer-window buf)
-        (set-window-buffer (get-buffer-window buf) buf)))))
+      (ia-writer--turn-on)))
+  (add-hook 'after-change-major-mode-hook #'ia-writer--turn-on))
 
-(defun ia-writer--enable-olivetti ()
-  "Enable olivetti in the current buffer if `ia-writer-mode' is active."
-  (when (and ia-writer-mode (not (bound-and-true-p olivetti-mode)))
-    (olivetti-mode 1)))
-
-(defun ia-writer--disable ()
+(defun ia-writer--global-disable ()
   "Deactivate zen writing environment, restoring saved state."
+  ;; Disable ia-writer-mode in all buffers
+  (remove-hook 'after-change-major-mode-hook #'ia-writer--turn-on)
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when ia-writer-mode
+        (ia-writer-mode -1))))
   ;; Restore org-bars-mode if it was active
-  (when (and (fboundp 'org-bars-mode) (ia-writer--restore 'org-bars))
+  (when (and (fboundp 'org-bars-mode) (ia-writer--global-restore 'org-bars))
     (add-hook 'org-mode-hook #'org-bars-mode)
     (dolist (buf (buffer-list))
       (with-current-buffer buf
         (when (derived-mode-p 'org-mode)
           (org-bars-mode 1)))))
   ;; Restore org-modern-mode if it was active
-  (when (and (fboundp 'global-org-modern-mode) (ia-writer--restore 'org-modern))
+  (when (and (fboundp 'global-org-modern-mode) (ia-writer--global-restore 'org-modern))
     (global-org-modern-mode 1))
-  ;; Olivetti
-  (remove-hook 'after-change-major-mode-hook #'ia-writer--enable-olivetti)
-  (when (ia-writer--restore 'olivetti)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (bound-and-true-p olivetti-mode)
-          (olivetti-mode -1)))))
-  ;; Margins
-  (let ((lm (ia-writer--restore 'left-margin))
-        (rm (ia-writer--restore 'right-margin)))
-    (when lm (setq-default left-margin-width lm))
-    (when rm (setq-default right-margin-width rm)))
   ;; UI chrome
-  (let ((sb (ia-writer--restore 'scroll-bar-mode))
-        (tb (ia-writer--restore 'tool-bar-mode))
-        (mb (ia-writer--restore 'menu-bar-mode)))
+  (let ((sb (ia-writer--global-restore 'scroll-bar-mode))
+        (tb (ia-writer--global-restore 'tool-bar-mode))
+        (mb (ia-writer--global-restore 'menu-bar-mode)))
     (when sb (scroll-bar-mode 1))
     (when tb (tool-bar-mode 1))
     (when mb (menu-bar-mode 1)))
   ;; Mode line
-  (let ((ml (ia-writer--restore 'mode-line-format)))
+  (let ((ml (ia-writer--global-restore 'mode-line-format)))
     (when ml (setq-default mode-line-format ml)))
-  ;; Line spacing
-  (let ((ls (ia-writer--restore 'line-spacing)))
-    (setq-default line-spacing ls))
   ;; Font
-  (let ((family (ia-writer--restore 'font)))
+  (let ((family (ia-writer--global-restore 'font)))
     (when family
       (set-face-attribute 'default nil :family family)))
-  ;; Theme
-  (when (ia-writer--restore 'theme)
-    (disable-theme 'ia-writer))
-  ;; Refresh
-  (dolist (buf (buffer-list))
-    (with-current-buffer buf
-      (when (get-buffer-window buf)
-        (set-window-buffer (get-buffer-window buf) buf)))))
+  ;; Theme — restore previous themes
+  (disable-theme 'ia-writer)
+  (let ((prev (ia-writer--global-restore 'previous-themes)))
+    (dolist (theme (reverse prev))
+      (load-theme theme t))))
+
+;;; --- ia-writer-focus-mode (buffer-local) ---
 
 (defvar-local ia-writer--focus-before-ov nil
   "Overlay covering text before the active unit.")
@@ -214,32 +206,9 @@ When nil, auto-detected from `font-lock-comment-face'."
       "#9E9E9E"))
 
 (defun ia-writer--focus-bounds ()
-  "Return (BEG . END) of the current focus unit."
-  (let ((beg (point))
-        (end (point)))
-    (save-excursion
-      (if (eq ia-writer-focus-unit 'paragraph)
-          (progn
-            (backward-paragraph)
-            (skip-chars-forward "\n\t ")
-            (setq beg (point)))
-        (condition-case nil
-            (progn
-              (backward-sentence)
-              (setq beg (point)))
-          (error (setq beg (line-beginning-position)))))
-      (goto-char end)
-      (if (eq ia-writer-focus-unit 'paragraph)
-          (progn
-            (forward-paragraph)
-            (skip-chars-backward "\n\t ")
-            (setq end (point)))
-        (condition-case nil
-            (progn
-              (forward-sentence)
-              (setq end (point)))
-          (error (setq end (line-end-position))))))
-    (cons beg end)))
+  "Return (BEG . END) of the current visual line."
+  (cons (save-excursion (beginning-of-visual-line) (point))
+        (save-excursion (end-of-visual-line) (point))))
 
 (defun ia-writer--focus-update ()
   "Update focus overlays around the current unit."
@@ -254,7 +223,7 @@ When nil, auto-detected from `font-lock-comment-face'."
 
 ;;;###autoload
 (define-minor-mode ia-writer-focus-mode
-  "Buffer-local minor mode that dims text outside the current sentence."
+  "Buffer-local minor mode that dims text outside the current visual line."
   :lighter nil
   (if ia-writer-focus-mode
       (let ((dimmed (ia-writer--focus-dimmed-color)))
