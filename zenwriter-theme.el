@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, themes
 ;; URL: https://github.com/jhou1/zenwriter-mode
@@ -221,8 +221,20 @@
  'zenwriter
  '(completions-highlight ((((background light)) (:background "#E0E0E0"))
                           (((background dark))  (:background "#2A2C2D"))))
+ '(completions-common-part ((((background light)) (:foreground "#424242"))
+                            (((background dark))  (:foreground "#C5C9C6"))))
+ '(completions-first-difference ((((background light)) (:foreground "#424242" :weight bold))
+                                 (((background dark))  (:foreground "#C5C9C6" :weight bold))))
  '(vertico-current ((((background light)) (:background "#E0E0E0"))
-                    (((background dark))  (:background "#2A2C2D")))))
+                    (((background dark))  (:background "#2A2C2D"))))
+ '(orderless-match-face-0 ((((background light)) (:foreground "#424242" :weight bold))
+                           (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ '(orderless-match-face-1 ((((background light)) (:foreground "#424242" :weight bold))
+                           (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ '(orderless-match-face-2 ((((background light)) (:foreground "#424242" :weight bold))
+                           (((background dark))  (:foreground "#C5C9C6" :weight bold))))
+ '(orderless-match-face-3 ((((background light)) (:foreground "#424242" :weight bold))
+                           (((background dark))  (:foreground "#C5C9C6" :weight bold)))))
 
 (provide-theme 'zenwriter)
 
