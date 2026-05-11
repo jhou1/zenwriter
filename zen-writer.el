@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.1.2
+;; Version: 0.1.3
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, wp
 ;; URL: https://github.com/jhou1/zen-writer
@@ -182,10 +182,19 @@ When nil, auto-detected from `font-lock-comment-face'."
     (add-hook 'ns-system-appearance-change-functions #'zen-writer--apply-appearance)))
 
 (defun zen-writer--load-theme ()
-  "Load or re-enable the zen-writer theme."
-  (if (memq 'zen-writer custom-known-themes)
-      (enable-theme 'zen-writer)
-    (load-theme 'zen-writer t))
+  "Load or re-enable the zen-writer theme.
+Temporarily neutralizes custom-set for our mode variables so that
+enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
+  (let ((saved-mode-cs (get 'global-zen-writer-mode 'custom-set))
+        (saved-focus-cs (get 'global-zen-writer-focus-mode 'custom-set)))
+    (put 'global-zen-writer-mode 'custom-set #'ignore)
+    (put 'global-zen-writer-focus-mode 'custom-set #'ignore)
+    (unwind-protect
+        (if (memq 'zen-writer custom-known-themes)
+            (enable-theme 'zen-writer)
+          (load-theme 'zen-writer t))
+      (put 'global-zen-writer-mode 'custom-set saved-mode-cs)
+      (put 'global-zen-writer-focus-mode 'custom-set saved-focus-cs)))
   (dolist (frame (frame-list))
     (frame-set-background-mode frame)))
 
@@ -235,14 +244,23 @@ When nil, auto-detected from `font-lock-comment-face'."
   (let ((family (zen-writer--global-restore 'font)))
     (when family
       (set-face-attribute 'default nil :family family)))
-  ;; Theme — restore previous themes and background mode
-  (disable-theme 'zen-writer)
-  (setq frame-background-mode (zen-writer--global-restore 'previous-bg-mode))
-  (dolist (frame (frame-list))
-    (frame-set-background-mode frame))
-  (let ((prev (zen-writer--global-restore 'previous-themes)))
-    (dolist (theme (reverse prev))
-      (load-theme theme t))))
+  ;; Theme — restore previous themes and background mode.
+  ;; Protect our mode variables from custom-theme-recalc-variable.
+  (let ((saved-mode-cs (get 'global-zen-writer-mode 'custom-set))
+        (saved-focus-cs (get 'global-zen-writer-focus-mode 'custom-set)))
+    (put 'global-zen-writer-mode 'custom-set #'ignore)
+    (put 'global-zen-writer-focus-mode 'custom-set #'ignore)
+    (unwind-protect
+        (progn
+          (disable-theme 'zen-writer)
+          (setq frame-background-mode (zen-writer--global-restore 'previous-bg-mode))
+          (dolist (frame (frame-list))
+            (frame-set-background-mode frame))
+          (let ((prev (zen-writer--global-restore 'previous-themes)))
+            (dolist (theme (reverse prev))
+              (load-theme theme t))))
+      (put 'global-zen-writer-mode 'custom-set saved-mode-cs)
+      (put 'global-zen-writer-focus-mode 'custom-set saved-focus-cs))))
 
 ;;; --- zen-writer-focus-mode (buffer-local) ---
 

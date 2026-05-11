@@ -1,0 +1,102 @@
+#+TITLE:  On the Craft of Writing
+#+AUTHOR: Jianwei Hou
+#+DATE:   <2026-05-11 Sun>
+
+* The Blank Page
+
+Every piece of writing begins the same way — with silence. The cursor
+blinks against an empty field, patient and unhurried. There is no
+judgment here, no audience. Just the quiet space between thinking and
+saying.
+
+The best tools for writing are the ones that disappear. A good pen
+becomes an extension of the hand. A good editor becomes an extension
+of the mind. What remains is only the writer and the words.
+
+* Principles                                                          :craft:
+
+** Less is more
+
+Remove every word that does not serve the sentence. Remove every
+sentence that does not serve the paragraph. What you /leave out/
+defines your writing as much as what you put in.
+
+#+BEGIN_QUOTE
+Perfection is achieved, not when there is nothing more to add,
+but when there is nothing left to take away.
+
+— Antoine de Saint-Exupery
+#+END_QUOTE
+
+** Write for one reader
+
+Don't write for everyone. Write for a single person sitting across
+from you, leaning in to hear what you have to say. Be specific. Be
+direct. Say =exactly= what you mean.
+
+** Rhythm matters
+
+Short sentences punch. Longer sentences carry the reader forward
+through an idea, building momentum until the thought arrives at its
+natural resting place. Vary the two. Read your work aloud — if you
+stumble, your reader will too.
+
+* TODO Daily writing log                                          :journal:
+
+** DONE Morning session — 750 words
+CLOSED: [2026-05-10 Sat 09:30]
+:PROPERTIES:
+:WORDS:    753
+:DURATION: 45min
+:END:
+
+Wrote the opening chapter draft. The key insight: start /in medias
+res/, not with backstory. Cut the first three paragraphs entirely.
+
+** TODO Afternoon revision
+SCHEDULED: <2026-05-11 Sun>
+
+Review yesterday's draft with fresh eyes. Checklist:
+
+- [X] Read aloud for rhythm
+- [X] Cut unnecessary adverbs
+- [ ] Tighten the dialogue
+- [ ] Check timeline consistency
+
+** TODO Research — historical setting                            :research:
+
+Sources to consult:
+
+| Source              | Type    | Status   |
+|---------------------+---------+----------|
+| City archives       | Primary | Pending  |
+| Henderson (2019)    | Book    | Reading  |
+| /The Paris Review/  | Journal | Complete |
+
+* Tools of the trade
+
+The right environment shapes the work. A distraction-free editor
+strips away the noise — no toolbars, no buttons, no chrome. Just
+background and text.
+
+Configuration is minimal. In Emacs, a single line suffices:
+
+#+BEGIN_SRC emacs-lisp
+(global-zen-writer-mode)
+#+END_SRC
+
+For more on building a writing environment, see the
+[[https://github.com/rnkn/olivetti][Olivetti]] package for centered text,
+or the ~writeroom-mode~ package for full-screen focus.
+
+* Notes to self
+
+#+BEGIN_VERSE
+Write drunk, edit sober.
+Write fast, revise slow.
+Write alone, share generously.
+#+END_VERSE
+
+The goal is not to write perfectly. The goal is to write /truthfully/.
+Everything else — style, structure, polish — follows from that single
+commitment. Sit down. Begin. The rest takes care of itself.
