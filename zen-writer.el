@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, wp
 ;; URL: https://github.com/jhou1/zen-writer
@@ -23,6 +23,9 @@
 ;;; Code:
 
 (require 'seq)
+
+(defvar olivetti-body-width)
+(declare-function olivetti-mode "olivetti")
 
 (defgroup zen-writer nil
   "Zen Writer zen mode for Emacs."
@@ -115,10 +118,18 @@ When nil, auto-detected from `font-lock-comment-face'."
 
 (defun zen-writer--global-enable ()
   "Activate the full zen writing environment."
-  ;; Theme — disable all other themes, then load zen-writer
   (zen-writer--global-save 'previous-themes (copy-sequence custom-enabled-themes))
-  (mapc #'disable-theme custom-enabled-themes)
-  (load-theme 'zen-writer t)
+  (zen-writer--global-save 'previous-bg-mode frame-background-mode)
+  (let ((desired-bg (when (boundp 'ns-system-appearance)
+                      (if (eq ns-system-appearance 'dark) 'dark 'light))))
+    (mapc #'disable-theme custom-enabled-themes)
+    ;; Set frame-background-mode AFTER disabling themes — some themes set it
+    ;; via custom-theme-set-variables, and disabling them reverts it to nil.
+    (when desired-bg
+      (setq frame-background-mode desired-bg))
+    (dolist (frame (frame-list))
+      (frame-set-background-mode frame))
+    (zen-writer--load-theme))
   ;; Font
   (let ((font (zen-writer--find-font)))
     (when font
@@ -151,10 +162,38 @@ When nil, auto-detected from `font-lock-comment-face'."
   (dolist (buf (buffer-list))
     (with-current-buffer buf
       (zen-writer--turn-on)))
-  (add-hook 'after-change-major-mode-hook #'zen-writer--turn-on))
+  (add-hook 'after-change-major-mode-hook #'zen-writer--turn-on)
+  ;; React to macOS light/dark appearance changes
+  (when (boundp 'ns-system-appearance-change-functions)
+    (zen-writer--global-save 'appearance-hook
+      (copy-sequence (bound-and-true-p ns-system-appearance-change-functions)))
+    (setq ns-system-appearance-change-functions nil)
+    (add-hook 'ns-system-appearance-change-functions #'zen-writer--apply-appearance)))
+
+(defun zen-writer--load-theme ()
+  "Load or re-enable the zen-writer theme."
+  (if (memq 'zen-writer custom-known-themes)
+      (enable-theme 'zen-writer)
+    (load-theme 'zen-writer t))
+  (dolist (frame (frame-list))
+    (frame-set-background-mode frame)))
+
+(defun zen-writer--apply-appearance (appearance)
+  "Switch zen-writer theme for the new system APPEARANCE (light or dark)."
+  (setq frame-background-mode (if (eq appearance 'dark) 'dark 'light))
+  (dolist (frame (frame-list))
+    (frame-set-background-mode frame))
+  (disable-theme 'zen-writer)
+  (zen-writer--load-theme))
 
 (defun zen-writer--global-disable ()
   "Deactivate zen writing environment, restoring saved state."
+  ;; Restore macOS appearance hook
+  (when (boundp 'ns-system-appearance-change-functions)
+    (remove-hook 'ns-system-appearance-change-functions #'zen-writer--apply-appearance)
+    (let ((prev (zen-writer--global-restore 'appearance-hook)))
+      (when prev
+        (setq ns-system-appearance-change-functions prev))))
   ;; Disable zen-writer-mode in all buffers
   (remove-hook 'after-change-major-mode-hook #'zen-writer--turn-on)
   (dolist (buf (buffer-list))
@@ -185,8 +224,11 @@ When nil, auto-detected from `font-lock-comment-face'."
   (let ((family (zen-writer--global-restore 'font)))
     (when family
       (set-face-attribute 'default nil :family family)))
-  ;; Theme — restore previous themes
+  ;; Theme — restore previous themes and background mode
   (disable-theme 'zen-writer)
+  (setq frame-background-mode (zen-writer--global-restore 'previous-bg-mode))
+  (dolist (frame (frame-list))
+    (frame-set-background-mode frame))
   (let ((prev (zen-writer--global-restore 'previous-themes)))
     (dolist (theme (reverse prev))
       (load-theme theme t))))
@@ -243,10 +285,14 @@ When nil, auto-detected from `font-lock-comment-face'."
       (delete-overlay zen-writer--focus-after-ov)
       (setq zen-writer--focus-after-ov nil))))
 
+(defun zen-writer--focus-turn-on ()
+  "Turn on `zen-writer-focus-mode' in the current buffer."
+  (zen-writer-focus-mode 1))
+
 ;;;###autoload
 (define-globalized-minor-mode global-zen-writer-focus-mode
   zen-writer-focus-mode
-  (lambda () (zen-writer-focus-mode 1)))
+  zen-writer--focus-turn-on)
 
 (provide 'zen-writer)
 
