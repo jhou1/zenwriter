@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, wp
 ;; URL: https://github.com/jhou1/zen-writer
@@ -86,6 +86,9 @@ When nil, auto-detected from `font-lock-comment-face'."
 (defvar zen-writer--global-saved-state nil
   "Alist of saved global settings for `global-zen-writer-mode'.")
 
+(defvar zen-writer--toggling nil
+  "Non-nil while `global-zen-writer-mode' is being enabled or disabled.")
+
 (defun zen-writer--global-save (key value)
   "Save KEY with VALUE to the global saved state alist."
   (setf (alist-get key zen-writer--global-saved-state) value))
@@ -112,9 +115,17 @@ When nil, auto-detected from `font-lock-comment-face'."
   "Global minor mode for the full Zen Writer zen experience."
   :global t
   :lighter nil
-  (if global-zen-writer-mode
-      (zen-writer--global-enable)
-    (zen-writer--global-disable)))
+  (unless zen-writer--toggling
+    (let ((zen-writer--toggling t)
+          (saved-custom-set (get 'global-zen-writer-mode 'custom-set)))
+      ;; Prevent enable-theme → custom-theme-recalc-variable from resetting
+      ;; this mode variable via custom-set-minor-mode during theme switches.
+      (put 'global-zen-writer-mode 'custom-set #'ignore)
+      (unwind-protect
+          (if global-zen-writer-mode
+              (zen-writer--global-enable)
+            (zen-writer--global-disable))
+        (put 'global-zen-writer-mode 'custom-set saved-custom-set)))))
 
 (defun zen-writer--global-enable ()
   "Activate the full zen writing environment."

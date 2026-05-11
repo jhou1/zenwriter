@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026
 ;; Author: jhou
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: faces, themes
 ;; URL: https://github.com/jhou1/zen-writer
