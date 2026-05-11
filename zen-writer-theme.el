@@ -1,4 +1,4 @@
-;;; ia-writer-theme.el --- iA Writer inspired theme for Emacs -*- lexical-binding: t; -*-
+;;; zen-writer-theme.el --- Zen Writer inspired theme for Emacs -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026
 ;; Author: jhou
@@ -14,13 +14,13 @@
 
 ;;; Commentary:
 
-;; A color theme replicating iA Writer's distraction-free writing aesthetic.
+;; A color theme replicating Zen Writer's distraction-free writing aesthetic.
 ;; Monochromatic palette with a signature blue cursor accent.
 ;; Supports both light and dark backgrounds via class-based detection.
 
 ;;; Code:
 
-(deftheme ia-writer "iA Writer inspired theme for distraction-free writing.")
+(deftheme zen-writer "Zen Writer inspired theme for distraction-free writing.")
 
 (let ((class '((class color) (min-colors 89)))
       ;; Light palette
@@ -61,7 +61,7 @@
       (dk-muted   "#909090"))
 
   (custom-theme-set-faces
-   'ia-writer
+   'zen-writer
 
    ;; --- Tier 1: Core Emacs faces ---
    `(default ((,class (:background ,lt-bg :foreground ,lt-fg))
@@ -76,10 +76,10 @@
                   (((background dark)) (:background ,dk-fringe :foreground ,dk-linum))))
    `(line-number-current-line ((,class (:background ,lt-fringe :foreground ,lt-fg :weight bold))
                                (((background dark)) (:background ,dk-fringe :foreground ,dk-fg :weight bold))))
-   `(mode-line ((,class (:background ,lt-ml-bg :foreground ,lt-ml-fg :box nil :underline (:color ,lt-ml-bg :style line)))
-                (((background dark)) (:background ,dk-ml-bg :foreground ,dk-ml-fg :box nil :underline (:color ,dk-ml-bg :style line)))))
-   `(mode-line-inactive ((,class (:background ,lt-bg :foreground ,lt-linum :box nil :underline (:color ,lt-ml-bg :style line)))
-                         (((background dark)) (:background ,dk-bg :foreground ,dk-linum :box nil :underline (:color ,dk-ml-bg :style line)))))
+   `(mode-line ((,class (:background ,lt-bg :foreground ,lt-bg :box nil :underline nil :overline nil))
+                (((background dark)) (:background ,dk-bg :foreground ,dk-bg :box nil :underline nil :overline nil))))
+   `(mode-line-inactive ((,class (:background ,lt-bg :foreground ,lt-bg :box nil :underline nil :overline nil))
+                         (((background dark)) (:background ,dk-bg :foreground ,dk-bg :box nil :underline nil :overline nil))))
    `(minibuffer-prompt ((,class (:foreground ,lt-prompt :weight bold))
                         (((background dark)) (:foreground ,dk-prompt :weight bold))))
    `(highlight ((,class (:background ,lt-hl))
@@ -241,6 +241,6 @@
    `(org-checkbox ((,class (:foreground ,lt-fg :weight bold))
                    (((background dark)) (:foreground ,dk-fg :weight bold))))))
 
-(provide-theme 'ia-writer)
+(provide-theme 'zen-writer)
 
-;;; ia-writer-theme.el ends here
+;;; zen-writer-theme.el ends here
