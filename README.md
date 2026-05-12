@@ -69,12 +69,12 @@ Add to your `init.el` or `.emacs`:
     :host github
     :repo "jhou1/zenwriter-mode"
     :files ("*.el"))
-  :commands (zenwriter-mode global-zenwriter-mode
-             zenwriter-focus-mode global-zenwriter-focus-mode)
   :init
   (add-to-list 'custom-theme-load-path
                (expand-file-name "straight/repos/zenwriter-mode"
-                                 user-emacs-directory)))
+                                 user-emacs-directory))
+  :config
+  (global-zenwriter-mode 1))
 ```
 
 ## Usage
