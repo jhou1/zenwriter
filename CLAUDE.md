@@ -84,6 +84,12 @@ emacs --batch -f batch-byte-compile zenwriter-theme.el
 
 # Lint with package-lint (if installed)
 emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
+
+# Run ERT test suite (36 tests across theme, modes, focus mode, overlay leak scenarios)
+emacs --batch -L . \
+  --eval "(add-to-list 'custom-theme-load-path default-directory)" \
+  -l ert -l test/zenwriter-mode-test.el \
+  -f ert-run-tests-batch-and-exit
 ```
 
 ## Conventions
