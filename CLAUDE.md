@@ -4,11 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-An Emacs color theme that replicates iA Writer's distraction-free writing aesthetic. The goal is zen-mode writing: no title bar, no buttons, no status bar — just background and text.
+A distraction-free writing environment for Emacs, inspired by iA Writer. Two-file package providing a monochromatic color theme, zen writing modes (olivetti centering, hidden chrome, font/spacing control), and visual-line focus dimming. The goal is zen-mode writing: no title bar, no buttons, no status bar — just background and text.
 
 ## Architecture
 
-Two-file Emacs package: `zenwriter-theme.el` (color theme) and `zenwriter-mode.el` (companion modes). Follows Emacs `deftheme` / `custom-theme-set-faces` conventions. Supports both light and dark variants. Pairs with `olivetti-mode` for centered text layout.
+Two-file Emacs package: `zenwriter-theme.el` (color theme via `deftheme` / `custom-theme-set-faces`) and `zenwriter-mode.el` (companion modes). Supports both light and dark variants via class-based face specs. Pairs with `olivetti-mode` for centered text layout.
+
+Key patterns:
+- Both `global-zenwriter-mode` and `global-zenwriter-focus-mode` are hand-written `define-minor-mode :global t` (not `define-globalized-minor-mode`) for explicit buffer iteration on enable/disable
+- `global-zenwriter-mode` saves/restores all modified global state (themes, font, chrome, mode-line) via an alist so toggling off is fully reversible
+- Theme loading temporarily sets `custom-set` to `#'ignore` on both global mode variables to prevent `custom-theme-recalc-variable` from re-triggering modes during `enable-theme`/`load-theme`
+- Focus mode overlays are tagged with `'zenwriter-focus t` property so `remove-overlays` can find and clean up orphaned overlays (e.g. after `kill-all-local-variables` during major mode changes)
+- macOS light/dark appearance changes are handled via `ns-system-appearance-change-functions`
+- Ivy face accumulation is worked around by copying candidate strings before formatting
 
 ## iA Writer Design Reference
 
@@ -35,7 +43,7 @@ Two-file Emacs package: `zenwriter-theme.el` (color theme) and `zenwriter-mode.e
 | Incremental search  | `#C3E9DB` (light green)      |
 | Error               | `#FF1493`                    |
 | Warning             | `#FF5F00`                    |
-| TODO                | `#AF5FFF`                    |
+| Highlight           | `#E0E0E0`                    |
 
 ### Dark Mode Colors (from Sublime/vim ports)
 | Element             | Value                        |
@@ -53,16 +61,15 @@ Two-file Emacs package: `zenwriter-theme.el` (color theme) and `zenwriter-mode.e
 | Syntax green        | `#B1BE5A`                    |
 | Syntax yellow       | `#F2B160`                    |
 | Syntax purple       | `#B893BE`                    |
-| Syntax orange       | `#EA9052`                    |
+| Highlight           | `#2A2C2D`                    |
 
 ### Focus Mode
-- Active sentence/paragraph: full foreground color
-- Surrounding text: dimmed to comment-level gray
-- The Spacemacs distraction-free-theme uses `#1dafe6` for cursor and `#b3e2f2` for region
+- Active visual line: full foreground color
+- Surrounding text: dimmed to comment-level gray (auto-detected from `font-lock-comment-face`, fallback `#9E9E9E`)
 
 ### Typography
-- Line height / leading: 1.5
-- Font: IBM Plex Mono (open source successor to Nitti Light), or iA Writer Quattro/Duo/Mono
+- Line spacing: 8px (via `zenwriter-line-spacing`)
+- Default font: Maple Mono CN, with fallback chain: Menlo → Consolas → Courier New
 - Variable pitch is acceptable for body text in writing modes
 
 ## Build & Test
@@ -71,8 +78,9 @@ Two-file Emacs package: `zenwriter-theme.el` (color theme) and `zenwriter-mode.e
 # Load theme in running Emacs
 emacs -Q -l zenwriter-mode.el
 
-# Batch byte-compile (should produce no warnings)
+# Batch byte-compile (should produce no warnings beyond defvar-local in with-current-buffer)
 emacs --batch -f batch-byte-compile zenwriter-mode.el
+emacs --batch -f batch-byte-compile zenwriter-theme.el
 
 # Lint with package-lint (if installed)
 emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
@@ -87,4 +95,4 @@ emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
 - Markdown/Org mode faces are first-class citizens — these are writing modes
 - Minimize use of bold/underline — the aesthetic is restrained
 - The modeline should be ultra-minimal (thin line or invisible) to match iA Writer's chrome-free design
-- Test and verify the features and bugfixes
+- Test and verify the features and bug fixes
