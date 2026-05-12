@@ -305,6 +305,12 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
   (cons (save-excursion (beginning-of-visual-line) (point))
         (save-excursion (end-of-visual-line) (point))))
 
+(defun zenwriter--focus-remove-overlays ()
+  "Remove all focus overlays from the current buffer."
+  (remove-overlays (point-min) (point-max) 'zenwriter-focus t)
+  (setq zenwriter--focus-before-ov nil)
+  (setq zenwriter--focus-after-ov nil))
+
 (defun zenwriter--focus-update ()
   "Update focus overlays around the current unit."
   (when (and zenwriter-focus-mode
@@ -322,21 +328,19 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
   :lighter nil
   (if zenwriter-focus-mode
       (let ((dimmed (zenwriter--focus-dimmed-color)))
+        (zenwriter--focus-remove-overlays)
         (setq zenwriter--focus-before-ov (make-overlay (point-min) (point-min)))
         (setq zenwriter--focus-after-ov (make-overlay (point-max) (point-max)))
         (overlay-put zenwriter--focus-before-ov 'face `(:foreground ,dimmed))
         (overlay-put zenwriter--focus-after-ov 'face `(:foreground ,dimmed))
+        (overlay-put zenwriter--focus-before-ov 'zenwriter-focus t)
+        (overlay-put zenwriter--focus-after-ov 'zenwriter-focus t)
         (overlay-put zenwriter--focus-before-ov 'priority 100)
         (overlay-put zenwriter--focus-after-ov 'priority 100)
         (add-hook 'post-command-hook #'zenwriter--focus-update nil t)
         (zenwriter--focus-update))
     (remove-hook 'post-command-hook #'zenwriter--focus-update t)
-    (when zenwriter--focus-before-ov
-      (delete-overlay zenwriter--focus-before-ov)
-      (setq zenwriter--focus-before-ov nil))
-    (when zenwriter--focus-after-ov
-      (delete-overlay zenwriter--focus-after-ov)
-      (setq zenwriter--focus-after-ov nil))))
+    (zenwriter--focus-remove-overlays)))
 
 (defun zenwriter--focus-turn-on ()
   "Turn on `zenwriter-focus-mode' in the current buffer."
@@ -345,9 +349,23 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
     (zenwriter-focus-mode 1)))
 
 ;;;###autoload
-(define-globalized-minor-mode global-zenwriter-focus-mode
-  zenwriter-focus-mode
-  zenwriter--focus-turn-on)
+(define-minor-mode global-zenwriter-focus-mode
+  "Global minor mode that enables `zenwriter-focus-mode' in all buffers."
+  :global t
+  :lighter nil
+  (if global-zenwriter-focus-mode
+      (progn
+        (dolist (buf (buffer-list))
+          (with-current-buffer buf
+            (zenwriter--focus-turn-on)))
+        (add-hook 'after-change-major-mode-hook #'zenwriter--focus-turn-on))
+    (remove-hook 'after-change-major-mode-hook #'zenwriter--focus-turn-on)
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when zenwriter-focus-mode
+          (zenwriter-focus-mode -1))
+        (remove-hook 'post-command-hook #'zenwriter--focus-update t)
+        (zenwriter--focus-remove-overlays)))))
 
 (provide 'zenwriter-mode)
 
