@@ -63,18 +63,17 @@ Add to your `init.el` or `.emacs`:
 ### straight.el + use-package
 
 ```elisp
-(use-package zenwriter-mode
-  :straight (zenwriter-mode
+(use-package zenwriter
+  :straight (zenwriter
     :type git
     :host github
-    :repo "jhou1/zenwriter-mode"
+    :repo "jhou1/zenwriter"
     :files ("*.el"))
   :init
   (add-to-list 'custom-theme-load-path
                (expand-file-name "straight/repos/zenwriter-mode"
-                                 user-emacs-directory))
-  :config
-  (global-zenwriter-mode 1))
+                                 user-emacs-directory)))
+(global-zenwriter-mode)
 ```
 
 ## Usage
