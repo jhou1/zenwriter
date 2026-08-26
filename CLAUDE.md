@@ -12,7 +12,8 @@ Two-file Emacs package: `zenwriter-theme.el` (color theme via `deftheme` / `cust
 
 Key patterns:
 - Both `global-zenwriter-mode` and `global-zenwriter-focus-mode` are hand-written `define-minor-mode :global t` (not `define-globalized-minor-mode`) for explicit buffer iteration on enable/disable
-- `global-zenwriter-mode` saves/restores all modified global state (themes, font, chrome, mode-line) via an alist so toggling off is fully reversible
+- `global-zenwriter-mode` captures one immutable state snapshot per activation; redundant enables do not overwrite it, and disable clears it only after restoration succeeds
+- The zenwriter theme is layered above existing themes rather than replacing them, so disabling it reveals the exact previous face state without reloading themes
 - Theme loading temporarily sets `custom-set` to `#'ignore` on both global mode variables to prevent `custom-theme-recalc-variable` from re-triggering modes during `enable-theme`/`load-theme`
 - Focus mode overlays are tagged with `'zenwriter-focus t` property so `remove-overlays` can find and clean up orphaned overlays (e.g. after `kill-all-local-variables` during major mode changes)
 - macOS light/dark appearance changes are handled via `ns-system-appearance-change-functions`
@@ -85,7 +86,7 @@ emacs --batch -f batch-byte-compile zenwriter-theme.el
 # Lint with package-lint (if installed)
 emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
 
-# Run ERT test suite (36 tests across theme, modes, focus mode, overlay leak scenarios)
+# Run ERT test suite (39 tests across theme, modes, focus mode, state restoration, and overlay leak scenarios)
 emacs --batch -L . \
   --eval "(add-to-list 'custom-theme-load-path default-directory)" \
   -l ert -l test/zenwriter-mode-test.el \

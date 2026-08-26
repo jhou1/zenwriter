@@ -174,6 +174,15 @@
         (zenwriter-mode -1))
       (should (equal line-spacing orig)))))
 
+(ert-deftest zenwriter-test-mode-redundant-enable-preserves-state ()
+  "Enabling an active buffer mode must not replace its saved state."
+  (zenwriter-test-with-buffer "test-redundant-enable" "hello"
+    (setq line-spacing 3)
+    (zenwriter-mode 1)
+    (zenwriter-mode 1)
+    (zenwriter-mode -1)
+    (should (= line-spacing 3))))
+
 
 ;;; --- D. global-zenwriter-mode ---
 
@@ -220,6 +229,79 @@
     (global-zenwriter-mode -1))
   (should (null zenwriter--global-saved-state))
   (should-not global-zenwriter-mode))
+
+(ert-deftest zenwriter-test-global-redundant-enable-preserves-state ()
+  "Enabling an active global mode must not replace its saved state."
+  (let ((orig-ml (copy-tree (default-value 'mode-line-format)))
+        (orig-themes (copy-sequence custom-enabled-themes)))
+    (unwind-protect
+        (progn
+          (global-zenwriter-mode 1)
+          (global-zenwriter-mode 1)
+          (global-zenwriter-mode -1)
+          (should-not global-zenwriter-mode)
+          (should (equal (default-value 'mode-line-format) orig-ml))
+          (should (equal custom-enabled-themes orig-themes))
+          (should (null zenwriter--global-saved-state)))
+      (when global-zenwriter-mode
+        (global-zenwriter-mode -1))
+      (setq-default mode-line-format orig-ml)
+      (mapc #'disable-theme custom-enabled-themes)
+      (dolist (theme (reverse orig-themes))
+        (if (memq theme custom-known-themes)
+            (enable-theme theme)
+          (load-theme theme t))))))
+
+(ert-deftest zenwriter-test-global-layers-over-existing-theme ()
+  "Global mode must leave the existing theme enabled underneath Zenwriter."
+  (let ((orig-themes (copy-sequence custom-enabled-themes)))
+    (unwind-protect
+        (progn
+          (mapc #'disable-theme custom-enabled-themes)
+          (load-theme 'wombat t)
+          (global-zenwriter-mode 1)
+          (should (equal custom-enabled-themes '(zenwriter wombat)))
+          (global-zenwriter-mode -1)
+          (should (equal custom-enabled-themes '(wombat))))
+      (when global-zenwriter-mode
+        (global-zenwriter-mode -1))
+      (mapc #'disable-theme custom-enabled-themes)
+      (dolist (theme (reverse orig-themes))
+        (if (memq theme custom-known-themes)
+            (enable-theme theme)
+          (load-theme theme t))))))
+
+(ert-deftest zenwriter-test-global-restores-nil-modeline ()
+  "A nil modeline is valid pre-mode state and must be restored exactly."
+  (let ((orig-ml (copy-tree (default-value 'mode-line-format))))
+    (unwind-protect
+        (progn
+          (setq-default mode-line-format nil)
+          (global-zenwriter-mode 1)
+          (global-zenwriter-mode -1)
+          (should-not (default-value 'mode-line-format)))
+      (when global-zenwriter-mode
+        (global-zenwriter-mode -1))
+      (setq-default mode-line-format orig-ml))))
+
+(ert-deftest zenwriter-test-global-disable-keeps-snapshot-on-error ()
+  "An interrupted disable must restore the modeline and retain retry state."
+  (let ((orig-ml (copy-tree (default-value 'mode-line-format))))
+    (unwind-protect
+        (progn
+          (global-zenwriter-mode 1)
+          (cl-letf (((symbol-function 'scroll-bar-mode)
+                     (lambda (&rest _)
+                       (error "simulated restoration failure"))))
+            (should-error (global-zenwriter-mode -1)))
+          (should (equal (default-value 'mode-line-format) orig-ml))
+          (should zenwriter--global-saved-state)
+          ;; The retained snapshot lets an explicit disable retry finish.
+          (global-zenwriter-mode -1)
+          (should (null zenwriter--global-saved-state)))
+      (when zenwriter--global-saved-state
+        (global-zenwriter-mode -1))
+      (setq-default mode-line-format orig-ml))))
 
 
 ;;; --- E. custom-set protection ---
@@ -401,24 +483,12 @@ In batch mode, visual line functions fall back to logical lines."
 
 ;;; --- I. State save/restore internals ---
 
-(ert-deftest zenwriter-test-save-restore-basic ()
-  "Save then restore returns value and removes key."
-  (let ((zenwriter--global-saved-state nil))
-    (zenwriter--global-save 'test-key 42)
-    (should (= (zenwriter--global-restore 'test-key) 42))
-    (should-not (alist-get 'test-key zenwriter--global-saved-state))))
-
-(ert-deftest zenwriter-test-save-restore-overwrite ()
-  "Second save overwrites first."
-  (let ((zenwriter--global-saved-state nil))
-    (zenwriter--global-save 'test-key 1)
-    (zenwriter--global-save 'test-key 2)
-    (should (= (zenwriter--global-restore 'test-key) 2))))
-
-(ert-deftest zenwriter-test-restore-missing-key ()
-  "Restoring a missing key returns nil without error."
-  (let ((zenwriter--global-saved-state nil))
-    (should-not (zenwriter--global-restore 'nonexistent))))
+(ert-deftest zenwriter-test-state-read-does-not-consume-snapshot ()
+  "Reading saved state must leave the snapshot available for a retry."
+  (let ((zenwriter--global-saved-state '((test-key . 42))))
+    (should (= (zenwriter--global-state-value 'test-key) 42))
+    (should (= (zenwriter--global-state-value 'test-key) 42))
+    (should (equal zenwriter--global-saved-state '((test-key . 42))))))
 
 (provide 'zenwriter-mode-test)
 

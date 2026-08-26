@@ -25,7 +25,10 @@
 (require 'seq)
 
 (defvar olivetti-body-width)
+(defvar org-mode-hook)
 (declare-function olivetti-mode "olivetti")
+(declare-function org-bars-mode "org-bars")
+(declare-function global-org-modern-mode "org-modern")
 
 (defgroup zenwriter nil
   "Zenwriter distraction-free writing mode."
@@ -64,22 +67,29 @@ When nil, auto-detected from `font-lock-comment-face'."
 (defvar-local zenwriter--saved-line-spacing nil
   "Saved line-spacing to restore when `zenwriter-mode' is disabled.")
 
+(defvar-local zenwriter--saved-line-spacing-valid-p nil
+  "Non-nil when `zenwriter--saved-line-spacing' holds pre-mode state.")
+
 ;;;###autoload
 (define-minor-mode zenwriter-mode
   "Buffer-local minor mode for zenwriter distraction-free writing."
   :lighter nil
   (if zenwriter-mode
-      (progn
+      (unless zenwriter--saved-line-spacing-valid-p
         (setq zenwriter--saved-line-spacing line-spacing)
+        (setq zenwriter--saved-line-spacing-valid-p t)
         (setq line-spacing zenwriter-line-spacing)
         (when (and (require 'olivetti nil t)
                    (not (minibufferp))
                    (not (string-prefix-p " " (buffer-name))))
           (setq olivetti-body-width zenwriter-body-width)
           (olivetti-mode 1)))
-    (setq line-spacing zenwriter--saved-line-spacing)
-    (when (bound-and-true-p olivetti-mode)
-      (olivetti-mode -1))))
+    (when zenwriter--saved-line-spacing-valid-p
+      (setq line-spacing zenwriter--saved-line-spacing)
+      (setq zenwriter--saved-line-spacing nil)
+      (setq zenwriter--saved-line-spacing-valid-p nil)
+      (when (bound-and-true-p olivetti-mode)
+        (olivetti-mode -1)))))
 
 ;;; --- global-zenwriter-mode ---
 
@@ -89,15 +99,38 @@ When nil, auto-detected from `font-lock-comment-face'."
 (defvar zenwriter--toggling nil
   "Non-nil while `global-zenwriter-mode' is being enabled or disabled.")
 
-(defun zenwriter--global-save (key value)
-  "Save KEY with VALUE to the global saved state alist."
-  (setf (alist-get key zenwriter--global-saved-state) value))
+(defun zenwriter--global-state-value (key)
+  "Return the saved global state value for KEY without removing it."
+  (alist-get key zenwriter--global-saved-state))
 
-(defun zenwriter--global-restore (key)
-  "Restore and remove KEY from global saved state."
-  (let ((val (alist-get key zenwriter--global-saved-state)))
-    (setf (alist-get key zenwriter--global-saved-state nil t) nil)
-    val))
+(defun zenwriter--global-capture-state ()
+  "Return an immutable snapshot of state changed by the global mode."
+  (let ((font (zenwriter--find-font)))
+    `((previous-themes . ,(copy-sequence custom-enabled-themes))
+      (previous-bg-mode . ,frame-background-mode)
+      (font-to-apply . ,font)
+      (font-family . ,(and font (face-attribute 'default :family)))
+      (mode-line-format . ,(copy-tree (default-value 'mode-line-format)))
+      (scroll-bar-mode . ,scroll-bar-mode)
+      (tool-bar-mode . ,tool-bar-mode)
+      (menu-bar-mode . ,menu-bar-mode)
+      (org-bars-available . ,(fboundp 'org-bars-mode))
+      (org-bars . ,(and (fboundp 'org-bars-mode)
+                        (memq #'org-bars-mode org-mode-hook)
+                        t))
+      (org-modern-available . ,(fboundp 'global-org-modern-mode))
+      (org-modern . ,(and (fboundp 'global-org-modern-mode)
+                          (bound-and-true-p global-org-modern-mode)
+                          t))
+      (ivy-advice . ,(and (fboundp 'ivy--format)
+                          (advice-member-p #'zenwriter--ivy-format-copy-cands
+                                           'ivy--format)
+                          t))
+      (appearance-hook-bound . ,(boundp 'ns-system-appearance-change-functions))
+      (appearance-hook . ,(and (boundp 'ns-system-appearance-change-functions)
+                               (copy-sequence
+                                ns-system-appearance-change-functions)))
+      (zenwriter-theme . ,(and (memq 'zenwriter custom-enabled-themes) t)))))
 
 (defun zenwriter--find-font ()
   "Return the first available font from preferred list."
@@ -124,72 +157,77 @@ When nil, auto-detected from `font-lock-comment-face'."
   :lighter nil
   (unless zenwriter--toggling
     (let ((zenwriter--toggling t)
-          (saved-custom-set (get 'global-zenwriter-mode 'custom-set)))
+          (saved-custom-set (get 'global-zenwriter-mode 'custom-set))
+          (inhibit-redisplay t))
       ;; Prevent enable-theme → custom-theme-recalc-variable from resetting
       ;; this mode variable via custom-set-minor-mode during theme switches.
       (put 'global-zenwriter-mode 'custom-set #'ignore)
       (unwind-protect
           (if global-zenwriter-mode
-              (zenwriter--global-enable)
-            (zenwriter--global-disable))
-        (put 'global-zenwriter-mode 'custom-set saved-custom-set)))))
+              (unless zenwriter--global-saved-state
+                (zenwriter--global-enable))
+            (when zenwriter--global-saved-state
+              (zenwriter--global-disable)))
+        (put 'global-zenwriter-mode 'custom-set saved-custom-set)
+        (force-mode-line-update t)))))
 
 (defun zenwriter--global-enable ()
   "Activate the full zen writing environment."
-  (zenwriter--global-save 'previous-themes (copy-sequence custom-enabled-themes))
-  (zenwriter--global-save 'previous-bg-mode frame-background-mode)
-  (let ((desired-bg (when (boundp 'ns-system-appearance)
-                      (if (eq ns-system-appearance 'dark) 'dark 'light))))
-    (mapc #'disable-theme custom-enabled-themes)
-    ;; Set frame-background-mode AFTER disabling themes — some themes set it
-    ;; via custom-theme-set-variables, and disabling them reverts it to nil.
-    (when desired-bg
-      (setq frame-background-mode desired-bg))
-    (dolist (frame (frame-list))
-      (frame-set-background-mode frame))
-    (zenwriter--load-theme))
-  ;; Font
-  (let ((font (zenwriter--find-font)))
-    (when font
-      (zenwriter--global-save 'font (face-attribute 'default :family))
-      (set-face-attribute 'default nil :family font)))
-  ;; Mode line
-  (zenwriter--global-save 'mode-line-format (default-value 'mode-line-format))
-  (setq-default mode-line-format (list " "))
-  ;; UI chrome
-  (zenwriter--global-save 'scroll-bar-mode scroll-bar-mode)
-  (zenwriter--global-save 'tool-bar-mode tool-bar-mode)
-  (zenwriter--global-save 'menu-bar-mode menu-bar-mode)
-  (scroll-bar-mode -1)
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  ;; Disable org-bars-mode if present
-  (when (fboundp 'org-bars-mode)
-    (zenwriter--global-save 'org-bars (member 'org-bars-mode org-mode-hook))
-    (remove-hook 'org-mode-hook #'org-bars-mode)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (bound-and-true-p org-bars-mode)
-          (org-bars-mode -1)))))
-  ;; Disable org-modern-mode if present
-  (when (fboundp 'global-org-modern-mode)
-    (zenwriter--global-save 'org-modern (bound-and-true-p global-org-modern-mode))
-    (when (bound-and-true-p global-org-modern-mode)
-      (global-org-modern-mode -1)))
-  ;; Fix ivy face accumulation
-  (when (fboundp 'ivy--format)
-    (advice-add 'ivy--format :around #'zenwriter--ivy-format-copy-cands))
-  ;; Enable zenwriter-mode in all existing buffers and future ones
-  (dolist (buf (buffer-list))
-    (with-current-buffer buf
-      (zenwriter--turn-on)))
-  (add-hook 'after-change-major-mode-hook #'zenwriter--turn-on)
-  ;; React to macOS light/dark appearance changes
-  (when (boundp 'ns-system-appearance-change-functions)
-    (zenwriter--global-save 'appearance-hook
-      (copy-sequence (bound-and-true-p ns-system-appearance-change-functions)))
-    (setq ns-system-appearance-change-functions nil)
-    (add-hook 'ns-system-appearance-change-functions #'zenwriter--apply-appearance)))
+  (setq zenwriter--global-saved-state (zenwriter--global-capture-state))
+  (condition-case err
+      (progn
+        ;; Keep existing themes enabled underneath Zenwriter.  Removing the
+        ;; top theme can then reveal the exact previous face state directly.
+        (let ((desired-bg (when (boundp 'ns-system-appearance)
+                            (if (eq ns-system-appearance 'dark) 'dark 'light))))
+          (when desired-bg
+            (setq frame-background-mode desired-bg))
+          (dolist (frame (frame-list))
+            (frame-set-background-mode frame))
+          (zenwriter--load-theme))
+        ;; Font
+        (let ((font (zenwriter--global-state-value 'font-to-apply)))
+          (when font
+            (set-face-attribute 'default nil :family font)))
+        ;; Mode line
+        (setq-default mode-line-format (list " "))
+        ;; UI chrome
+        (scroll-bar-mode -1)
+        (tool-bar-mode -1)
+        (menu-bar-mode -1)
+        ;; Disable org-bars-mode if present
+        (when (zenwriter--global-state-value 'org-bars-available)
+          (remove-hook 'org-mode-hook #'org-bars-mode)
+          (dolist (buf (buffer-list))
+            (with-current-buffer buf
+              (when (bound-and-true-p org-bars-mode)
+                (org-bars-mode -1)))))
+        ;; Disable org-modern-mode if present
+        (when (and (zenwriter--global-state-value 'org-modern-available)
+                   (bound-and-true-p global-org-modern-mode))
+          (global-org-modern-mode -1))
+        ;; Fix ivy face accumulation, without taking ownership of pre-existing
+        ;; advice installed by the user.
+        (when (and (fboundp 'ivy--format)
+                   (not (zenwriter--global-state-value 'ivy-advice)))
+          (advice-add 'ivy--format :around #'zenwriter--ivy-format-copy-cands))
+        ;; Enable zenwriter-mode in all existing buffers and future ones
+        (dolist (buf (buffer-list))
+          (with-current-buffer buf
+            (zenwriter--turn-on)))
+        (add-hook 'after-change-major-mode-hook #'zenwriter--turn-on)
+        ;; React to macOS light/dark appearance changes
+        (when (zenwriter--global-state-value 'appearance-hook-bound)
+          (setq ns-system-appearance-change-functions nil)
+          (add-hook 'ns-system-appearance-change-functions
+                    #'zenwriter--apply-appearance)))
+    (error
+     ;; Attempt to put the editor back before propagating the enable error.
+     (condition-case nil
+         (zenwriter--global-disable)
+       (error nil))
+     (setq global-zenwriter-mode nil)
+     (signal (car err) (cdr err)))))
 
 (defun zenwriter--load-theme ()
   "Load or re-enable the zenwriter theme.
@@ -207,6 +245,15 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
       (put 'global-zenwriter-focus-mode 'custom-set saved-focus-cs)))
   (dolist (frame (frame-list))
     (frame-set-background-mode frame)))
+
+(defvar-local zenwriter--focus-before-ov nil
+  "Overlay covering text before the active unit.")
+
+(defvar-local zenwriter--focus-after-ov nil
+  "Overlay covering text after the active unit.")
+
+(defvar-local zenwriter-focus-mode nil
+  "Non-nil when Zenwriter focus mode is enabled in the current buffer.")
 
 (defun zenwriter--focus-refresh ()
   "Refresh focus mode overlay colors for the current theme."
@@ -230,69 +277,70 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
 
 (defun zenwriter--global-disable ()
   "Deactivate zen writing environment, restoring saved state."
-  ;; Restore macOS appearance hook
-  (when (boundp 'ns-system-appearance-change-functions)
-    (remove-hook 'ns-system-appearance-change-functions #'zenwriter--apply-appearance)
-    (let ((prev (zenwriter--global-restore 'appearance-hook)))
-      (when prev
-        (setq ns-system-appearance-change-functions prev))))
-  ;; Remove ivy face accumulation fix
-  (advice-remove 'ivy--format #'zenwriter--ivy-format-copy-cands)
-  ;; Disable zenwriter-mode in all buffers
-  (remove-hook 'after-change-major-mode-hook #'zenwriter--turn-on)
-  (dolist (buf (buffer-list))
-    (with-current-buffer buf
-      (when zenwriter-mode
-        (zenwriter-mode -1))))
-  ;; Restore org-bars-mode if it was active
-  (when (and (fboundp 'org-bars-mode) (zenwriter--global-restore 'org-bars))
-    (add-hook 'org-mode-hook #'org-bars-mode)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (derived-mode-p 'org-mode)
-          (org-bars-mode 1)))))
-  ;; Restore org-modern-mode if it was active
-  (when (and (fboundp 'global-org-modern-mode) (zenwriter--global-restore 'org-modern))
-    (global-org-modern-mode 1))
-  ;; UI chrome
-  (let ((sb (zenwriter--global-restore 'scroll-bar-mode))
-        (tb (zenwriter--global-restore 'tool-bar-mode))
-        (mb (zenwriter--global-restore 'menu-bar-mode)))
-    (when sb (scroll-bar-mode 1))
-    (when tb (tool-bar-mode 1))
-    (when mb (menu-bar-mode 1)))
-  ;; Mode line
-  (let ((ml (zenwriter--global-restore 'mode-line-format)))
-    (when ml (setq-default mode-line-format ml)))
-  ;; Font
-  (let ((family (zenwriter--global-restore 'font)))
-    (when family
-      (set-face-attribute 'default nil :family family)))
-  ;; Theme — restore previous themes and background mode.
-  ;; Protect our mode variables from custom-theme-recalc-variable.
-  (let ((saved-mode-cs (get 'global-zenwriter-mode 'custom-set))
-        (saved-focus-cs (get 'global-zenwriter-focus-mode 'custom-set)))
-    (put 'global-zenwriter-mode 'custom-set #'ignore)
-    (put 'global-zenwriter-focus-mode 'custom-set #'ignore)
-    (unwind-protect
-        (progn
-          (disable-theme 'zenwriter)
-          (setq frame-background-mode (zenwriter--global-restore 'previous-bg-mode))
-          (dolist (frame (frame-list))
-            (frame-set-background-mode frame))
-          (let ((prev (zenwriter--global-restore 'previous-themes)))
-            (dolist (theme (reverse prev))
-              (load-theme theme t))))
-      (put 'global-zenwriter-mode 'custom-set saved-mode-cs)
-      (put 'global-zenwriter-focus-mode 'custom-set saved-focus-cs))))
+  ;; Restore critical visible state from the immutable snapshot even if a
+  ;; package-specific cleanup above it signals an error.  The snapshot is
+  ;; cleared only after the complete restoration succeeds, so a retry remains
+  ;; possible after an interrupted disable.
+  (unwind-protect
+      (progn
+        ;; Restore macOS appearance hook exactly, including an original nil.
+        (when (zenwriter--global-state-value 'appearance-hook-bound)
+          (remove-hook 'ns-system-appearance-change-functions
+                       #'zenwriter--apply-appearance)
+          (setq ns-system-appearance-change-functions
+                (copy-sequence
+                 (zenwriter--global-state-value 'appearance-hook))))
+        ;; Remove only advice installed by this activation.
+        (unless (zenwriter--global-state-value 'ivy-advice)
+          (advice-remove 'ivy--format #'zenwriter--ivy-format-copy-cands))
+        ;; Disable zenwriter-mode in all buffers
+        (remove-hook 'after-change-major-mode-hook #'zenwriter--turn-on)
+        (dolist (buf (buffer-list))
+          (with-current-buffer buf
+            (when zenwriter-mode
+              (zenwriter-mode -1))))
+        ;; Restore org-bars-mode if it was active
+        (when (and (zenwriter--global-state-value 'org-bars-available)
+                   (zenwriter--global-state-value 'org-bars))
+          (add-hook 'org-mode-hook #'org-bars-mode)
+          (dolist (buf (buffer-list))
+            (with-current-buffer buf
+              (when (derived-mode-p 'org-mode)
+                (org-bars-mode 1)))))
+        ;; Restore org-modern-mode if it was active
+        (when (and (zenwriter--global-state-value 'org-modern-available)
+                   (zenwriter--global-state-value 'org-modern))
+          (global-org-modern-mode 1))
+        ;; UI chrome
+        (if (zenwriter--global-state-value 'scroll-bar-mode)
+            (scroll-bar-mode 1)
+          (scroll-bar-mode -1))
+        (if (zenwriter--global-state-value 'tool-bar-mode)
+            (tool-bar-mode 1)
+          (tool-bar-mode -1))
+        (if (zenwriter--global-state-value 'menu-bar-mode)
+            (menu-bar-mode 1)
+          (menu-bar-mode -1)))
+    ;; Mode line: nil is valid state, so restore it unconditionally.
+    (setq-default mode-line-format
+                  (copy-tree
+                   (zenwriter--global-state-value 'mode-line-format)))
+    ;; Font
+    (when (zenwriter--global-state-value 'font-to-apply)
+      (set-face-attribute 'default nil :family
+                          (zenwriter--global-state-value 'font-family)))
+    ;; Theme and background mode.  Existing themes remained enabled, so
+    ;; removing our layer reveals their original faces without reloading.
+    (unless (zenwriter--global-state-value 'zenwriter-theme)
+      (disable-theme 'zenwriter))
+    (setq frame-background-mode
+          (zenwriter--global-state-value 'previous-bg-mode))
+    (dolist (frame (frame-list))
+      (frame-set-background-mode frame))
+    (force-mode-line-update t))
+  (setq zenwriter--global-saved-state nil))
 
 ;;; --- zenwriter-focus-mode (buffer-local) ---
-
-(defvar-local zenwriter--focus-before-ov nil
-  "Overlay covering text before the active unit.")
-
-(defvar-local zenwriter--focus-after-ov nil
-  "Overlay covering text after the active unit.")
 
 (defun zenwriter--focus-dimmed-color ()
   "Return the color to use for dimmed text."
