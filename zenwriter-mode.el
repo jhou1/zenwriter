@@ -28,14 +28,13 @@
 (defvar org-mode-hook)
 (declare-function olivetti-mode "olivetti")
 (declare-function org-bars-mode "org-bars")
-(declare-function global-org-modern-mode "org-modern")
 
 (defgroup zenwriter nil
   "Zenwriter distraction-free writing mode."
   :group 'faces
   :prefix "zenwriter-")
 
-(defcustom zenwriter-font-family "Maple Mono CN"
+(defcustom zenwriter-font-family "Maple Mono SL NF CN"
   "Font family used by `global-zenwriter-mode'."
   :type 'string
   :group 'zenwriter)
@@ -118,10 +117,6 @@ When nil, auto-detected from `font-lock-comment-face'."
       (org-bars . ,(and (fboundp 'org-bars-mode)
                         (memq #'org-bars-mode org-mode-hook)
                         t))
-      (org-modern-available . ,(fboundp 'global-org-modern-mode))
-      (org-modern . ,(and (fboundp 'global-org-modern-mode)
-                          (bound-and-true-p global-org-modern-mode)
-                          t))
       (ivy-advice . ,(and (fboundp 'ivy--format)
                           (advice-member-p #'zenwriter--ivy-format-copy-cands
                                            'ivy--format)
@@ -135,7 +130,7 @@ When nil, auto-detected from `font-lock-comment-face'."
 (defun zenwriter--find-font ()
   "Return the first available font from preferred list."
   (seq-find (lambda (f) (member f (font-family-list)))
-            (list zenwriter-font-family "Maple Mono CN" "Menlo" "Consolas" "Courier New")))
+            (list zenwriter-font-family "Maple Mono SL NF CN" "Maple Mono CN" "Menlo" "Consolas" "Courier New")))
 
 (defun zenwriter--turn-on ()
   "Turn on `zenwriter-mode' in the current buffer if appropriate."
@@ -202,10 +197,6 @@ When nil, auto-detected from `font-lock-comment-face'."
             (with-current-buffer buf
               (when (bound-and-true-p org-bars-mode)
                 (org-bars-mode -1)))))
-        ;; Disable org-modern-mode if present
-        (when (and (zenwriter--global-state-value 'org-modern-available)
-                   (bound-and-true-p global-org-modern-mode))
-          (global-org-modern-mode -1))
         ;; Fix ivy face accumulation, without taking ownership of pre-existing
         ;; advice installed by the user.
         (when (and (fboundp 'ivy--format)
@@ -307,10 +298,6 @@ enable-theme -> custom-theme-recalc-variable cannot re-trigger them."
             (with-current-buffer buf
               (when (derived-mode-p 'org-mode)
                 (org-bars-mode 1)))))
-        ;; Restore org-modern-mode if it was active
-        (when (and (zenwriter--global-state-value 'org-modern-available)
-                   (zenwriter--global-state-value 'org-modern))
-          (global-org-modern-mode 1))
         ;; UI chrome
         (if (zenwriter--global-state-value 'scroll-bar-mode)
             (scroll-bar-mode 1)

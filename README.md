@@ -20,7 +20,7 @@ https://github.com/user-attachments/assets/ac11afa2-c831-45fc-a18d-b8cdc399e04e
 
 **Zen writing mode** (`zenwriter-mode.el`)
 - `zenwriter-mode` (buffer-local) — olivetti centering + generous line spacing
-- `global-zenwriter-mode` — full zen: loads theme, sets font, hides toolbar/scrollbar/menubar/modeline, disables org-bars and org-modern if present, enables `zenwriter-mode` in all buffers. Toggling off restores your previous themes and settings.
+- `global-zenwriter-mode` — full zen: loads theme, sets font, hides toolbar/scrollbar/menubar/modeline, disables org-bars if present, enables `zenwriter-mode` in all buffers. Toggling off restores your previous themes and settings.
 
 **Focus mode**
 - `zenwriter-focus-mode` (buffer-local) — dims all text except the current visual line
@@ -28,19 +28,34 @@ https://github.com/user-attachments/assets/ac11afa2-c831-45fc-a18d-b8cdc399e04e
 
 ## Prerequisites
 
-### Font: Maple Mono CN
+### Font: Maple Mono SL NF CN
 
-The theme uses [Maple Mono CN](https://github.com/subframe7536/maple-font) by default. Install it before using `global-zenwriter-mode`.
+The theme uses [Maple Mono SL NF CN](https://github.com/subframe7536/maple-font) by default ("SL" for slim width, "NF" for Nerd Font icons, and "CN" for CJK glyph support with 2:1 alignment). Install it before using `global-zenwriter-mode`.
 
-**macOS (Homebrew):**
+Since the slim (SL) variant combined with NF and CN is a custom width profile, you can build it from the [subframe7536/maple-font](https://github.com/subframe7536/maple-font) repository:
+
+**Option 1: GitHub Actions (Recommended — no local toolchain needed)**
+
+1. Fork or visit the [subframe7536/maple-font](https://github.com/subframe7536/maple-font) repository.
+2. Navigate to the **Actions** tab and select the **Custom Build** workflow.
+3. Click **Run workflow** and configure:
+   - **Glyph width mode (`width`)**: `slim`
+   - **Include Chinese version (`cn`)**: checked (`true`)
+   - **Nerd Font icon mode (`nerd_font`)**: `default` (or your preferred style)
+4. When the build finishes, download the font archive from artifacts/releases and install the font files to your system fonts directory.
+
+**Option 2: Build locally with Python**
 
 ```bash
-brew install --cask font-maple-mono-cn
+git clone https://github.com/subframe7536/maple-font --depth 1
+cd maple-font
+pip install -r requirements.txt
+python build.py --width slim --cn --nf
 ```
 
-**Manual download:**
+Install the generated `.ttf` files to your system fonts directory.
 
-Download from [Maple Font releases](https://github.com/subframe7536/maple-font/releases) and install the `MapleMono-CN-*.ttf` files to your system fonts directory.
+*(Alternatively, use Docker via `docker build -t maple-font .`)*
 
 If you prefer a different font, set `zenwriter-font-family` before enabling the mode.
 
@@ -98,7 +113,7 @@ Toggle off with the same commands (or pass `-1`). `global-zenwriter-mode` restor
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `zenwriter-font-family` | `"Maple Mono CN"` | Font set by `global-zenwriter-mode` |
+| `zenwriter-font-family` | `"Maple Mono SL NF CN"` | Font set by `global-zenwriter-mode` |
 | `zenwriter-line-spacing` | `8` | Extra line spacing in pixels |
 | `zenwriter-body-width` | `100` | Text body width in columns (olivetti) |
 | `zenwriter-focus-dimmed-color` | `nil` (auto) | Foreground color for dimmed text; when nil, reads from `font-lock-comment-face` |

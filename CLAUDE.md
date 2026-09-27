@@ -70,7 +70,7 @@ Key patterns:
 
 ### Typography
 - Line spacing: 8px (via `zenwriter-line-spacing`)
-- Default font: Maple Mono CN, with fallback chain: Menlo → Consolas → Courier New
+- Default font: Maple Mono SL NF CN, with fallback chain: Menlo → Consolas → Courier New
 - Variable pitch is acceptable for body text in writing modes
 
 ## Build & Test
@@ -86,7 +86,7 @@ emacs --batch -f batch-byte-compile zenwriter-theme.el
 # Lint with package-lint (if installed)
 emacs --batch -l package-lint -f package-lint-batch-and-exit zenwriter-mode.el
 
-# Run ERT test suite (39 tests across theme, modes, focus mode, state restoration, and overlay leak scenarios)
+# Run ERT test suite (40 tests across theme, modes, focus mode, state restoration, and overlay leak scenarios)
 emacs --batch -L . \
   --eval "(add-to-list 'custom-theme-load-path default-directory)" \
   -l ert -l test/zenwriter-mode-test.el \

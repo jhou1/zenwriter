@@ -124,6 +124,7 @@
 
 (ert-deftest zenwriter-test-custom-defaults ()
   "Custom variables have expected default values."
+  (should (equal zenwriter-font-family "Maple Mono SL NF CN"))
   (should (= zenwriter-line-spacing 8))
   (should (= zenwriter-body-width 100))
   (should (null zenwriter-focus-dimmed-color))
@@ -215,6 +216,16 @@
     (should (eq menu-bar-mode orig-menu))
     (should (eq tool-bar-mode orig-tool))
     (should (eq scroll-bar-mode orig-scroll))))
+
+(ert-deftest zenwriter-test-global-preserves-org-modern ()
+  "global-zenwriter-mode must not touch org-modern-mode."
+  (let ((global-org-modern-mode t)
+        (called nil))
+    (cl-letf (((symbol-function 'global-org-modern-mode)
+               (lambda (&rest _) (setq called t))))
+      (zenwriter-test-with-global-mode
+        (should-not called))
+      (should-not called))))
 
 (ert-deftest zenwriter-test-global-hooks ()
   "global-zenwriter-mode manages after-change-major-mode-hook."
